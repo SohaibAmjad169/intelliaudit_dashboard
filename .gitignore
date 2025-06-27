@@ -1,0 +1,10 @@
+# Ignore all node_modules folders
+**/node_modules/
+# Ignore all log files
+*.log
+/intelliaudit_backend/dist/
+/intelliaudit_frontend/dist/
+# Ignore all build directories
+/build/
+# Ignore all coverage reports
+/coverage/
