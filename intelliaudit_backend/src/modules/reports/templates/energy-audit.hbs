@@ -1,0 +1,285 @@
+<!-- Energy Audit Section -->
+
+<h2 id="energy-audit-introduction">A. Introduction</h2>
+<p>
+  This ASHRAE Level II Energy Audit report presents the findings of an energy audit conducted at
+  {{project.property_address}}.
+  The audit was performed in accordance with ASHRAE standards and includes an analysis of the building's energy usage,
+  identification of energy conservation measures, and recommendations for implementation.
+</p>
+
+<h2 id="energy-audit-procedures">B. Energy Audit Procedures</h2>
+<p>
+  The energy audit was conducted using the following procedures:
+</p>
+<ol>
+  <li>On-site facility survey of existing mechanical, electrical, lighting, and control systems</li>
+  <li>Interview with operations and maintenance personnel</li>
+  <li>Analysis of utility bills and energy usage patterns</li>
+  <li>Identification of energy conservation opportunities</li>
+  <li>Development of energy conservation measures</li>
+  <li>Financial analysis of proposed measures</li>
+</ol>
+
+<h2 id="eems-cost-savings-summary-table">C. EEMs Cost Savings Summary Table</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Measure</th>
+      <th class="text-right">Annual Savings (kWh)</th>
+      <th class="text-right">Cost Savings ($)</th>
+      <th class="text-right">Implementation Cost ($)</th>
+      <th class="text-right">Payback (years)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each measures}}
+    <tr>
+      <td>{{title}}</td>
+      <td class="text-right">{{formatNumber estimatedSavings.energy 1}}</td>
+      <td class="text-right">{{formatCurrency estimatedSavings.cost}}</td>
+      <td class="text-right">{{formatCurrency implementationCost}}</td>
+      <td class="text-right">{{formatNumber estimatedSavings.paybackPeriod 1}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="5" class="text-center">No energy efficiency measures available</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h2 id="existing-conditions-observations">D. Existing Conditions and Observations</h2>
+
+<h3 id="general-building-description">1. General Building Description</h3>
+<p>
+  {{project.description}}
+</p>
+<p>
+  <strong>Building Type:</strong> {{project.building_type}}<br>
+  <strong>Year Built:</strong> {{project.property_year_built}}<br>
+  <strong>Gross Floor Area:</strong> {{formatNumber project.property_gross_floor_area}} ft²<br>
+  <strong>Operating Hours:</strong> {{#if project.operating_hours}}{{project.operating_hours}}{{else}}Monday-Friday:
+  8:00 AM - 6:00 PM, Saturday: 9:00 AM - 1:00 PM, Sunday: Closed{{/if}}
+</p>
+
+<h3 id="building-envelope">2. Building Envelope</h3>
+<p>
+  {{#if buildingEnvelope}}{{buildingEnvelope}}{{else}}The building envelope consists of concrete walls with single-pane
+  windows. The roof is flat with a built-up roofing system. There are opportunities for improving the building envelope
+  through window replacements and additional insulation.{{/if}}
+</p>
+
+<h3 id="hvac-control-systems">3. Heating, Ventilation, Air Conditioning (HVAC) and Control Systems</h3>
+<p>
+  {{#if hvacSystems}}{{hvacSystems}}{{else}}The building is served by a central HVAC system consisting of air handling
+  units, chillers, and boilers. The system is controlled by a building automation system (BAS). The equipment is
+  original to the building and has reached the end of its useful life. There are opportunities for energy savings
+  through equipment upgrades and control system improvements.{{/if}}
+</p>
+
+<h3 id="lighting-system-control">4. Lighting System & Control</h3>
+<p>
+  {{#if lightingSystems}}{{lightingSystems}}{{else}}The building is primarily lit with fluorescent fixtures. The
+  lighting is controlled by manual switches with limited occupancy sensors. There are opportunities for energy savings
+  through LED upgrades and advanced lighting controls.{{/if}}
+</p>
+
+<h3 id="domestic-hot-water">5. Domestic Hot Water</h3>
+<p>
+  {{#if domesticHotWater}}{{domesticHotWater}}{{else}}Domestic hot water is provided by gas-fired water heaters. The
+  system is original to the building and has reached the end of its useful life. There are opportunities for energy
+  savings through equipment upgrades and water conservation measures.{{/if}}
+</p>
+
+<h3 id="other-equipment">6. Other Equipment</h3>
+<p>
+  {{#if otherEquipment}}{{otherEquipment}}{{else}}The building has various other equipment including elevators, office
+  equipment, and kitchen appliances. There are opportunities for energy savings through equipment upgrades and
+  operational improvements.{{/if}}
+</p>
+
+<h2 id="energy-efficiency-measures-recommended">E. Energy Efficiency Measures Recommended</h2>
+
+<style>
+  /* Metrics boxes for energy efficiency measures */
+  .metrics-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 15px 0 25px 0;
+  }
+
+  .metric-box {
+    padding: 12px 15px;
+    border-radius: 4px;
+    min-width: 160px;
+    flex: 1;
+  }
+
+  .metric-label {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  /* Box-specific colors */
+  .cost-savings {
+    background-color: #ebffee;
+  }
+
+  .cost-savings .metric-label {
+    color: #006837;
+  }
+
+  .energy-savings {
+    background-color: #ebf9ff;
+  }
+
+  .energy-savings .metric-label {
+    color: #005994;
+  }
+
+  .payback-period {
+    background-color: #f9ebff;
+  }
+
+  .payback-period .metric-label {
+    color: #8130a7;
+  }
+</style>
+
+{{#each measures}}
+<h3 id="eem-{{@index}}">EEM {{add @index 1}}: {{title}}</h3>
+<p>
+  <strong>Description:</strong> {{description}}
+</p>
+
+<!-- Metrics boxes for key values -->
+<div class="metrics-container">
+  <div class="metric-box cost-savings">
+    <div class="metric-label">Annual Cost Savings</div>
+    <div class="metric-value">${{formatNumber estimatedSavings.cost 0}}</div>
+  </div>
+
+  <div class="metric-box energy-savings">
+    <div class="metric-label">Energy Savings</div>
+    <div class="metric-value">{{formatNumber estimatedSavings.energy 0}} kWh/year</div>
+  </div>
+
+  <div class="metric-box payback-period">
+    <div class="metric-label">Payback Period</div>
+    <div class="metric-value">{{formatNumber estimatedSavings.paybackPeriod 1}} years</div>
+  </div>
+</div>
+
+{{else}}
+<p>No energy efficiency measures have been identified at this time.</p>
+{{/each}}
+
+<h2 id="eems-already-implemented">F. EEMs Already Implemented</h2>
+<p>
+  {{#if implementedMeasures}}
+  The following energy efficiency measures have already been implemented:
+<ul>
+  {{#each implementedMeasures}}
+  <li>{{this}}</li>
+  {{/each}}
+</ul>
+{{else}}
+No energy efficiency measures have been previously implemented.
+{{/if}}
+</p>
+
+<h2 id="eems-to-consider">G. EEMs to Consider</h2>
+{{#if measuresToConsider}}
+{{#each measuresToConsider}}
+<h3>{{this.title}}</h3>
+<p>{{this.description}}</p>
+{{/each}}
+{{else}}
+<p>No additional energy efficiency measures to consider at this time.</p>
+{{/if}}
+
+<h2 id="eems-requiring-further-investigation">H. EEMs Requiring Further Investigation</h2>
+{{#if measuresForInvestigation}}
+{{#each measuresForInvestigation}}
+<h3>{{this.title}}</h3>
+<p>{{this.description}}</p>
+{{/each}}
+{{else}}
+<p>No energy efficiency measures requiring further investigation at this time.</p>
+{{/if}}
+
+<h2 id="energy-star-benchmarking">I. Current ENERGY STAR® Benchmarking Test</h2>
+<p>
+  {{#if energyStar}}
+  The building has an ENERGY STAR score of {{energyStar.score}}. This places the building in the
+  {{energyStar.percentile}} percentile compared to similar buildings nationwide.
+  {{else}}
+  ENERGY STAR benchmarking has not been performed for this building.
+  {{/if}}
+</p>
+
+<h2 id="energy-use-analysis">J. Energy Use Analysis</h2>
+
+<h3 id="aggregated-electricity">1. Aggregated Electricity</h3>
+<p>
+  The building's annual electricity consumption is {{formatNumber totalUsage.totalEnergyUsage}} kWh, with an average
+  monthly consumption of {{formatNumber monthlyAvgElectricity}} kWh.
+</p>
+
+<h3 id="aggregated-natural-gas">2. Aggregated Natural Gas</h3>
+<p>
+  {{#if totalUsage.naturalGasUsage}}
+  The building's annual natural gas consumption is {{formatNumber totalUsage.naturalGasUsage}} therms, with an average
+  monthly consumption of {{formatNumber monthlyAvgGas}} therms.
+  {{else}}
+  The building does not use natural gas.
+  {{/if}}
+</p>
+
+<h3 id="building-energy-end-use-charts">3. Building Energy End Use Charts</h3>
+<p>
+  The following chart shows the breakdown of energy usage by end use:
+</p>
+<!-- Insert chart here -->
+
+<h3 id="weather-effects-on-energy-use">4. Weather Effects on Energy Use</h3>
+<p>
+  The building's energy usage is affected by weather conditions, with higher electricity usage during summer months due
+  to cooling loads and higher natural gas usage during winter months due to heating loads.
+</p>
+
+<h3 id="aggregated-electric-gas-consumption-table">5. Aggregated Electric and Gas Consumption Table</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Month</th>
+      <th class="text-right">Electricity (kWh)</th>
+      <th class="text-right">Natural Gas (therms)</th>
+      <th class="text-right">Total Cost ($)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each monthlyData.electric}}
+    <tr>
+      <td>{{this.month}}</td>
+      <td class="text-right">{{formatNumber this.usage}}</td>
+      <td class="text-right">
+        {{#if ../monthlyData.naturalGas}}
+        {{formatNumber (lookup (lookup ../monthlyData.naturalGas @index) 'usage')}}
+        {{else}}
+        N/A
+        {{/if}}
+      </td>
+      <td class="text-right">{{formatCurrency this.cost}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>

@@ -1,0 +1,231 @@
+<!-- Appendices Section -->
+
+<h2 id="assumptions">A. Assumptions</h2>
+<p>
+  The following assumptions were made in the development of this report:
+</p>
+<ul>
+  <li>Energy and water costs are based on current utility rates and are subject to change.</li>
+  <li>Implementation costs are estimates based on industry standards and may vary depending on the specific equipment selected and installation conditions.</li>
+  <li>Energy and water savings are estimates based on engineering calculations and may vary depending on actual operating conditions and occupant behavior.</li>
+  <li>The building will continue to be operated and maintained in a manner consistent with current practices.</li>
+  <li>Equipment will be replaced at the end of its useful life.</li>
+</ul>
+
+<h2 id="equations">B. Equations:</h2>
+<p>
+  The following equations were used in the development of this report:
+</p>
+<ul>
+  <li><strong>Simple Payback Period:</strong> Implementation Cost ÷ Annual Cost Savings</li>
+  <li><strong>Return on Investment (ROI):</strong> (Annual Cost Savings ÷ Implementation Cost) × 100%</li>
+  <li><strong>Net Present Value (NPV):</strong> Sum of the present value of future cash flows - Initial investment</li>
+  <li><strong>Internal Rate of Return (IRR):</strong> Discount rate that makes the NPV of all cash flows equal to zero</li>
+  <li><strong>Energy Use Intensity (EUI):</strong> Annual Energy Use ÷ Gross Floor Area</li>
+  <li><strong>Water Use Intensity (WUI):</strong> Annual Water Use ÷ Gross Floor Area</li>
+</ul>
+
+<h2 id="supporting-documents">C. Supporting Documents</h2>
+
+<h3 id="equipment-list">1. Equipment List</h3>
+
+<h4>HVAC</h4>
+<table>
+  <thead>
+    <tr>
+      <th>Equipment</th>
+      <th>Quantity</th>
+      <th>Capacity</th>
+      <th>Age</th>
+      <th>Condition</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each hvacEquipment}}
+    <tr>
+      <td>{{type}}</td>
+      <td>{{quantity}}</td>
+      <td>{{capacity}}</td>
+      <td>{{age}}</td>
+      <td>{{condition}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="5" class="text-center">No HVAC equipment information available</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h4>Lighting</h4>
+<table>
+  <thead>
+    <tr>
+      <th>Fixture Type</th>
+      <th>Quantity</th>
+      <th>Wattage</th>
+      <th>Location</th>
+      <th>Control Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each lightingEquipment}}
+    <tr>
+      <td>{{type}}</td>
+      <td>{{quantity}}</td>
+      <td>{{wattage}}</td>
+      <td>{{location}}</td>
+      <td>{{control}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="5" class="text-center">No lighting equipment information available</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h4>Plumbing</h4>
+<table>
+  <thead>
+    <tr>
+      <th>Fixture Type</th>
+      <th>Quantity</th>
+      <th>Flow Rate</th>
+      <th>Location</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each plumbingEquipment}}
+    <tr>
+      <td>{{type}}</td>
+      <td>{{quantity}}</td>
+      <td>{{flowRate}}</td>
+      <td>{{location}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="4" class="text-center">No plumbing equipment information available</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h4>Domestic Hot Water (DHW)</h4>
+<table>
+  <thead>
+    <tr>
+      <th>Equipment</th>
+      <th>Quantity</th>
+      <th>Capacity</th>
+      <th>Age</th>
+      <th>Condition</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each dhwEquipment}}
+    <tr>
+      <td>{{type}}</td>
+      <td>{{quantity}}</td>
+      <td>{{capacity}}</td>
+      <td>{{age}}</td>
+      <td>{{condition}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="5" class="text-center">No domestic hot water equipment information available</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h4>Other</h4>
+<table>
+  <thead>
+    <tr>
+      <th>Equipment</th>
+      <th>Quantity</th>
+      <th>Capacity</th>
+      <th>Age</th>
+      <th>Condition</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each otherEquipment}}
+    <tr>
+      <td>{{type}}</td>
+      <td>{{quantity}}</td>
+      <td>{{capacity}}</td>
+      <td>{{age}}</td>
+      <td>{{condition}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="5" class="text-center">No other equipment information available</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h3 id="functional-test-sheets">2. Functional Test Sheets</h3>
+<p>
+  {{#if functionalTestSheets}}
+  Functional test sheets are included in the appendix.
+  {{else}}
+  No functional test sheets are available at this time.
+  {{/if}}
+</p>
+
+<h3 id="building-drawings">3. Building drawings</h3>
+<p>
+  {{#if buildingDrawings}}
+  Building drawings are included in the appendix.
+  {{else}}
+  No building drawings are available at this time.
+  {{/if}}
+</p>
+
+<h3 id="equipment-literature">4. Equipment Literature</h3>
+<p>
+  {{#if equipmentLiterature}}
+  Equipment literature is included in the appendix.
+  {{else}}
+  No equipment literature is available at this time.
+  {{/if}}
+</p>
+
+<h2 id="equivalent-full-load-hours">D. Equivalent Full Load Hours (EFLH)</h2>
+<p>
+  The following equivalent full load hours were used in the energy calculations:
+</p>
+<ul>
+  <li><strong>Cooling:</strong> {{#if coolingEFLH}}{{coolingEFLH}}{{else}}1,200{{/if}} hours per year</li>
+  <li><strong>Heating:</strong> {{#if heatingEFLH}}{{heatingEFLH}}{{else}}800{{/if}} hours per year</li>
+  <li><strong>Lighting:</strong> {{#if lightingEFLH}}{{lightingEFLH}}{{else}}3,000{{/if}} hours per year</li>
+  <li><strong>Ventilation:</strong> {{#if ventilationEFLH}}{{ventilationEFLH}}{{else}}4,000{{/if}} hours per year</li>
+  <li><strong>Domestic Hot Water:</strong> {{#if dhwEFLH}}{{dhwEFLH}}{{else}}2,000{{/if}} hours per year</li>
+</ul>
+
+<h2 id="additional-o-m">E. Additional O&M</h2>
+<p>
+  The following additional operation and maintenance recommendations are provided:
+</p>
+<ul>
+  <li>Develop and implement a preventive maintenance program for all building systems.</li>
+  <li>Train facility staff on proper operation and maintenance of building systems.</li>
+  <li>Implement a system for tracking and addressing occupant comfort complaints.</li>
+  <li>Regularly review and optimize building automation system setpoints and schedules.</li>
+  <li>Conduct periodic recommissioning of building systems to ensure continued optimal performance.</li>
+</ul>
+
+<h2 id="ladwp-rebates">F. LADWP Rebates</h2>
+<p>
+  The following rebates and incentives are available from the Los Angeles Department of Water and Power (LADWP):
+</p>
+<ul>
+  <li><strong>Commercial Lighting Efficiency Offering (CLEO):</strong> Rebates for energy-efficient lighting upgrades.</li>
+  <li><strong>Custom Performance Program (CPP):</strong> Incentives for custom energy efficiency projects.</li>
+  <li><strong>Commercial Water Conservation Rebate Program:</strong> Rebates for water-efficient fixtures and equipment.</li>
+  <li><strong>Technical Assistance Program (TAP):</strong> Technical assistance for energy efficiency projects.</li>
+  <li><strong>Retrocommissioning Express (RCx Express):</strong> Incentives for retrocommissioning projects.</li>
+</ul>

@@ -1,0 +1,390 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model energy_conservation_measures {
+  id                   String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  project_id           String    @db.Uuid
+  measure_type         String
+  measure_id           String
+  title                String
+  existing_condition   String?
+  recommendation       String?
+  benefits             Json?
+  estimated_savings    Json?
+  photo_references     Json?
+  implementation_notes String?
+  created_at           DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime? @default(now()) @db.Timestamptz(6)
+  calculation_notes    String?
+  implementation_cost  Decimal?  @db.Decimal
+  incentives           Decimal?  @db.Decimal
+  projects             projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([project_id])
+}
+
+/// This model stores energy breakdown data generated from field notes
+model energy_breakdown {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id         String    @db.Uuid
+  breakdown_data     Json
+  model_used         String?   @db.VarChar(50)
+  created_at         DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime? @default(now()) @db.Timestamptz(6)
+  total_electric_kwh Decimal?  @db.Decimal(15, 2)
+  total_gas_therms   Decimal?  @db.Decimal(15, 2)
+  total_steam_mmbtu  Decimal?  @db.Decimal(15, 2)
+  total_other_mmbtu  Decimal?  @db.Decimal(15, 2)
+  projects           projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([project_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model equipment_analysis {
+  id                         String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id                 String                  @db.Uuid
+  equipment_type             String                  @db.VarChar(255)
+  manufacturer               String?                 @db.VarChar(255)
+  model                      String?                 @db.VarChar(255)
+  category                   String?                 @db.VarChar(50)
+  quantity                   Int?
+  wattage                    Decimal?                @db.Decimal
+  capacity                   String?                 @db.VarChar(100)
+  operating_hours            Decimal?                @db.Decimal
+  days_per_week              Decimal?                @db.Decimal
+  annual_kwh                 Decimal?                @db.Decimal
+  notes                      String?
+  confidence                 Decimal?                @db.Decimal
+  created_at                 DateTime?               @default(now()) @db.Timestamptz(6)
+  updated_at                 DateTime?               @default(now()) @db.Timestamptz(6)
+  ai_model                   String?                 @db.VarChar(50)
+  flow_rate                  String?                 @db.VarChar(50)
+  efficiency                 String?                 @db.VarChar(100)
+  location                   String?
+  input_rating               Decimal?                @db.Decimal
+  temperature_rise           Decimal?                @db.Decimal
+  efficiency_unit            String?                 @db.VarChar
+  energy_source              String?                 @db.VarChar
+  daily_usage                Decimal?                @db.Decimal
+  calculation_details        Json?
+  is_per_unit                Boolean?                @default(false)
+  total_quantity             Int?
+  serial_number              String?
+  source_type                String?
+  /// Stores additional equipment specifications including:
+  specifications             Json?                   @default("{}")
+  load_factor                Decimal?                @default(1.0) @db.Decimal
+  area_type                  String?                 @default("common") @db.VarChar(20)
+  annual_cost_estimate       Decimal?                @default(0.0) @db.Decimal
+  is_calculation_verified    Boolean?                @default(false)
+  weekly_hours               Decimal?                @db.Decimal
+  annual_hours               Decimal?                @db.Decimal
+  formula_used               String?
+  work_shown                 String?
+  recommendations            String?
+  photo_url                  String?
+  thumbnail_url              String?
+  photo_filename             String?
+  photos                     Json?                   @default("[]")
+  condition                  Json?
+  assumptions                Json?
+  end_use_category           String?                 @db.VarChar(50)
+  original_photo_analysis_id String?                 @db.Uuid
+  control_strategy           String?
+  voltage                    String?                 @db.VarChar(50)
+  phase                      String?                 @db.VarChar(20)
+  fuel_type                  String?                 @db.VarChar(50)
+  cooling_efficiency         String?                 @db.VarChar(50)
+  heating_efficiency         String?                 @db.VarChar(50)
+  equipment_age              Int?
+  installation_date          DateTime?               @db.Date
+  maintenance_schedule       String?                 @db.VarChar(100)
+  replacement_cost           Decimal?                @db.Decimal
+  expected_lifetime          Int?
+  refrigerant_type           String?                 @db.VarChar(50)
+  airflow_rate               Decimal?                @db.Decimal
+  lumens                     Int?
+  color_temperature          Int?
+  lighting_type              String?                 @db.VarChar(50)
+  flow_rate_gpm              Decimal?                @db.Decimal
+  water_usage_annual         Decimal?                @db.Decimal
+  recovery_rate              Decimal?                @db.Decimal
+  standby_loss               Decimal?                @db.Decimal
+  cycles_per_week            Int?
+  water_usage_per_cycle      Decimal?                @db.Decimal
+  irrigation_area            Decimal?                @db.Decimal
+  irrigation_schedule        String?                 @db.VarChar(255)
+  energy_star_rated          Boolean?                @default(false)
+  annual_therms              Decimal?                @db.Decimal
+  completeness_score         Decimal?                @db.Decimal
+  data_source                String?                 @db.VarChar(50)
+  has_critical_gaps          Boolean?                @default(false)
+  is_duplicate               Boolean?                @default(false)
+  missing_critical_fields    String?
+  missing_fields             String?
+  merged_into_id             String?                 @db.Uuid
+  mounting_type              String?                 @db.VarChar(50)
+  /// - mountingDetails: string
+  /// For lighting equipment specifically
+  /// Equipment multiplier for calculations
+  multiplier                 Decimal?                @default(1.0) @db.Decimal
+  /// Number of lamps per fixture, primarily for lighting equipment
+  lamps_per_fixture          Decimal?                @default(1.0) @db.Decimal
+  /// Type of lamp (LED, CFL, T-8, Incandescent, etc.)
+  lamp_type                  String?                 @db.VarChar(50)
+  /// Total number of lamps (quantity × lamps_per_fixture)
+  number_of_lamps            Int?
+  projects                   projects                @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  photo_metadata_results     photo_metadata_result[]
+}
+
+model profiles {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  full_name  String?
+  avatar_url String?
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model projects {
+  id                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                         String
+  building_address             String
+  status                       String                         @default("SCHEDULE_NEEDED")
+  created_at                   DateTime?                      @default(now()) @db.Timestamptz(6)
+  updated_at                   DateTime?                      @default(now()) @db.Timestamptz(6)
+  pm_id                        String?
+  property_name                String?
+  property_address             String?
+  property_city                String?
+  property_state               String?
+  property_postal_code         String?
+  property_primary_function    String?
+  property_gross_floor_area    Int?
+  property_year_built          Int?
+  raw_notes                    String?
+  ec_o                         String?
+  is_public                    Boolean?                       @default(false)
+  building_info                Json?
+  total_units                  Int?
+  unit_types                   Json?
+  building_floors              Int?
+  building_type                String?
+  building_notes               String?
+  energy_star_score            Int?
+  site_total_energy            Decimal?                       @db.Decimal(15, 1)
+  source_total_energy          Decimal?                       @db.Decimal(15, 1)
+  site_intensity               Decimal?                       @db.Decimal(10, 1)
+  source_intensity             Decimal?                       @db.Decimal(10, 1)
+  direct_ghg_emissions         Decimal?                       @db.Decimal(10, 2)
+  energy_metrics_last_updated  DateTime?                      @db.Timestamptz(6)
+  energy_metrics_year          Int?
+  energy_metrics_month         Int?
+  energy_metrics_source        String?                        @default("manual") @db.VarChar(50)
+  satellite_image_url          String?
+  ai_context                   Json?
+  water_score                  Int?                           @db.SmallInt
+  energy_breakdowns            energy_breakdown[]
+  energy_conservation_measures energy_conservation_measures[]
+  equipment_analysis           equipment_analysis[]
+  metadata_match_jobs          metadata_match_job[]
+  photo_batch_jobs             photo_batch_job[]
+  utility_calcs                utility_calcs[]
+  utility_data                 utility_data[]
+  weather_comparison           weather_comparison[]
+
+  @@index([building_type], map: "idx_projects_building_type")
+  @@index([total_units], map: "idx_projects_total_units")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model utility_calcs {
+  id                  String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  project_id          String   @db.Uuid
+  pm_id               String   @db.VarChar
+  month               Int
+  year                Int
+  meter_id            String   @db.VarChar
+  meter_type          String   @db.VarChar
+  usage               Decimal? @db.Decimal
+  cost                Decimal? @db.Decimal
+  usage_units         String?  @db.VarChar
+  property_name       String?  @db.VarChar
+  equipment_id        String?  @db.Uuid
+  created_at          DateTime @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime @default(now()) @db.Timestamptz(6)
+  heating_degree_days Int?
+  cooling_degree_days Int?
+  projects            projects @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([project_id, pm_id, meter_type, month, year])
+  @@index([heating_degree_days, cooling_degree_days], map: "idx_utility_calcs_degree_days")
+  @@index([meter_type], map: "idx_utility_calcs_meter_type")
+  @@index([project_id, year, month], map: "idx_utility_calcs_project_year_month")
+  @@index([year, month], map: "utility_calcs_date_idx")
+  @@index([meter_type])
+  @@index([project_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model utility_data {
+  id                        String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  project_id                String    @db.Uuid
+  pm_id                     String    @db.VarChar(255)
+  meter_id                  String?   @db.VarChar(100)
+  meter_name                String?   @db.VarChar(255)
+  meter_type                String?   @db.VarChar(100)
+  start_date                DateTime? @db.Timestamptz(6)
+  end_date                  DateTime? @db.Timestamptz(6)
+  month                     Int
+  year                      Int
+  usage                     Decimal?  @db.Decimal
+  cost                      Decimal?  @default(0) @db.Decimal
+  usage_units               String?   @db.VarChar(50)
+  property_name             String?   @db.VarChar(255)
+  property_address          String?   @db.VarChar(255)
+  property_city             String?   @db.VarChar(100)
+  property_state            String?   @db.VarChar(50)
+  property_postal_code      String?   @db.VarChar(20)
+  property_primary_function String?   @db.VarChar(100)
+  property_gross_floor_area Decimal?  @db.Decimal
+  property_year_built       Int?
+  import_date               DateTime? @default(now()) @db.Timestamptz(6)
+  hdd                       String?
+  cdd                       String?
+  projects                  projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([project_id, pm_id, meter_id, start_date], map: "unique_utility_data")
+  @@index([start_date, end_date], map: "utility_data_dates_idx")
+  @@index([project_id])
+  @@index([pm_id], map: "utility_data_property_id_idx")
+  @@index([month, year], map: "idx_utility_data_month_year")
+}
+
+model weather_comparison {
+  id                  Int       @id @default(autoincrement())
+  project_id          String    @db.Uuid
+  zip_code            String    @db.VarChar(10)
+  station_id          Int
+  month               Int
+  base_year           Int
+  comparison_year     Int?
+  base_year_hdd       Decimal   @db.Decimal
+  base_year_cdd       Decimal   @db.Decimal
+  base_year_tdd       Decimal   @db.Decimal
+  comparison_year_hdd Decimal   @db.Decimal
+  comparison_year_cdd Decimal   @db.Decimal
+  comparison_year_tdd Decimal   @db.Decimal
+  hdd_delta           Decimal?  @db.Decimal
+  cdd_delta           Decimal?  @db.Decimal
+  tdd_delta           Decimal?  @db.Decimal
+  created_at          DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime? @default(now()) @db.Timestamptz(6)
+  projects            projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([project_id, zip_code, month])
+  @@index([project_id], map: "idx_weather_comparison_project_id")
+  @@index([zip_code], map: "idx_weather_comparison_zip_code")
+}
+
+model photo_batch_job {
+  id               String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id       String                  @db.Uuid
+  status           String                  @db.VarChar(20)
+  created_at       DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime                @default(now()) @db.Timestamptz(6)
+  completed_at     DateTime?               @db.Timestamptz(6)
+  total_photos     Int
+  processed_photos Int                     @default(0)
+  equipment_type   String?                 @db.VarChar(255)
+  priority         String                  @default("normal") @db.VarChar(10)
+  match_jobs       metadata_match_job[]
+  project          projects                @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  metadata_results photo_metadata_result[]
+
+  @@index([project_id], map: "idx_photo_batch_job_project_id")
+  @@index([status], map: "idx_photo_batch_job_status")
+}
+
+model photo_metadata_result {
+  id                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  batch_id                String              @db.Uuid
+  photo_id                String?             @db.Uuid
+  photo_url               String?
+  equipment_type          String?             @db.VarChar(255)
+  manufacturer            String?             @db.VarChar(255)
+  model                   String?             @db.VarChar(255)
+  serial_number           String?             @db.VarChar(255)
+  capacity                String?             @db.VarChar(100)
+  efficiency              String?             @db.VarChar(100)
+  efficiency_unit         String?             @db.VarChar(50)
+  year                    String?             @db.VarChar(10)
+  condition               String?             @db.VarChar(20)
+  confidence              Decimal?            @db.Decimal(3, 2)
+  processing_time         Int?
+  extracted_at            DateTime            @default(now()) @db.Timestamptz(6)
+  is_applied              Boolean             @default(false)
+  applied_to_equipment_id String?             @db.Uuid
+  suggested_matches       Json?
+  equipment               equipment_analysis? @relation(fields: [applied_to_equipment_id], references: [id], onUpdate: NoAction)
+  batch                   photo_batch_job     @relation(fields: [batch_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([batch_id], map: "idx_photo_metadata_result_batch_id")
+  @@index([equipment_type], map: "idx_photo_metadata_result_equipment")
+  @@index([applied_to_equipment_id])
+}
+
+model metadata_match_job {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  project_id      String          @db.Uuid
+  batch_id        String          @db.Uuid
+  status          String          @db.VarChar(20)
+  created_at      DateTime        @default(now()) @db.Timestamptz(6)
+  completed_at    DateTime?       @db.Timestamptz(6)
+  config          Json?
+  results_summary Json?
+  batch           photo_batch_job @relation(fields: [batch_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  project         projects        @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([project_id], map: "idx_metadata_match_job_project")
+  @@index([batch_id], map: "idx_metadata_match_job_batch")
+}
+
+enum project_stage {
+  data_collection
+  analysis
+  report
+  review
+  complete
+}
+
+enum project_status {
+  UNASSIGNED
+  SCHEDULE_NEEDED
+  SITE_VISIT_SCHEDULED
+  REVISIT_NEEDED
+  PENDING_PE_SIGNATURE
+  PENDING_CITY_APPROVAL
+  AWAITING_PAYMENT
+  OUTSOURCED
+  ON_HOLD
+  CANCELED
+}
+
+enum report_section_type {
+  executive_summary
+  energy_audit
+  water_audit
+  retrocommissioning
+  appendices
+}

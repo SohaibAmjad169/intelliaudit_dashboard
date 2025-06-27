@@ -1,0 +1,386 @@
+import PDFDocument from 'pdfkit';
+import { Injectable } from '@nestjs/common';
+import { BaseReportComponent } from './base-report.component';
+
+@Injectable()
+export class WaterAuditComponent extends BaseReportComponent {
+  constructor() {
+    super();
+    this.sections = [
+      'Introduction',
+      'Water Audit Procedures',
+      'WEMs Cost Savings Summary',
+      'Existing Conditions',
+      'Recommended WEMs',
+      'Implemented WEMs',
+      'WEMs to Consider',
+      'WEMs Requiring Investigation',
+      'Water Use Analysis'
+    ];
+  }
+
+  /**
+   * Renders the water audit section of the report
+   * @param doc PDFKit document
+   * @param data Object containing water audit data
+   */
+  render(doc: typeof PDFDocument, data: any): void {
+    // Extract data with default empty values to prevent null/undefined errors
+    const { 
+      totalUsage = { water: 0 }, 
+      monthlyData = { water: [] }, 
+      measures = [], 
+      existingConditions = [] 
+    } = data || {};
+    
+    // Reset layout
+    this.resetPageLayout(doc);
+    
+    // Brand colors
+    const brandGreen = '#4d9b58';
+    const sectionGrey = '#4A4A4A';
+    
+    // Section title (Roman numeral)
+    doc.fontSize(18)
+       .fillColor(brandGreen)
+       .font('Helvetica-Bold')
+       .text('VI.   Water Audit Report', { align: 'left' });
+    doc.moveDown();
+    
+    // Helper function to render table rows
+    const renderTableRow = (y: number, cells: string[], columnWidths: number[]) => {
+      let x = doc.page.margins.left;
+      cells.forEach((cell, i) => {
+        doc.text(cell, x, y, { width: columnWidths[i] });
+        x += columnWidths[i];
+      });
+    };
+    
+    // A. Introduction
+    doc.fontSize(14)
+       .fillColor(sectionGrey)
+       .font('Helvetica-Bold')
+       .text('A. Introduction:', { align: 'left' });
+    doc.moveDown();
+    
+    doc.fontSize(12)
+       .fillColor('#000000')
+       .font('Helvetica')
+       .text('This section provides a comprehensive analysis of the building\'s water systems and identifies opportunities for water efficiency improvements.');
+    doc.moveDown(2);
+    
+    // B. Water Audit Procedures
+    doc.fontSize(14)
+       .fillColor(sectionGrey)
+       .font('Helvetica-Bold')
+       .text('B. Water Audit Procedures:', { align: 'left' });
+    doc.moveDown();
+    
+    doc.fontSize(12)
+       .fillColor('#000000')
+       .font('Helvetica')
+       .text('The water audit was conducted following established procedures, including:');
+    doc.moveDown(0.5);
+    
+    const procedures = [
+      'Detailed analysis of water bills and consumption patterns',
+      'On-site inspection of water systems and fixtures',
+      'Identification of leaks and water waste',
+      'Measurement of fixture flow rates',
+      'Evaluation of irrigation systems'
+    ];
+    
+    procedures.forEach(procedure => {
+      doc.fontSize(10)
+         .text(`• ${procedure}`);
+    });
+    doc.moveDown(2);
+    
+    // C. WEMs Cost Savings Summary Table
+    doc.fontSize(14)
+       .fillColor(sectionGrey)
+       .font('Helvetica-Bold')
+       .text('C. WEMs Cost Savings Summary Table:', { align: 'left' });
+    doc.moveDown();
+    
+    // Cost Savings Table
+    const headerY = doc.y;
+    const columnWidths = [150, 100, 100, 100, 100];
+    const headerCells = ['Measure', 'Annual Savings (gal)', 'Cost Savings ($)', 'Implementation Cost ($)', 'Payback (years)'];
+    
+    // Draw header background
+    doc.rect(doc.page.margins.left, headerY, 
+             columnWidths.reduce((a, b) => a + b, 0), 20)
+       .fill('#f5f5f5');
+    
+    // Header text
+    doc.fontSize(10)
+       .fillColor(sectionGrey)
+       .font('Helvetica-Bold');
+    renderTableRow(headerY + 5, headerCells, columnWidths);
+    
+    // Table content
+    doc.fontSize(10)
+       .fillColor('#000000')
+       .font('Helvetica');
+    
+    let currentY = headerY + 25;
+    // Add null check for measures array
+    if (measures && Array.isArray(measures)) {
+      measures.forEach((measure: any) => {
+      if (currentY > doc.page.height - doc.page.margins.bottom) {
+        doc.addPage();
+        currentY = doc.page.margins.top;
+      }
+      
+      const cells = [
+        measure.name || '',
+        this.formatNumber(measure.annualSavings || 0),
+        this.formatCurrency(measure.costSavings || 0),
+        this.formatCurrency(measure.implementationCost || 0),
+        measure.paybackPeriod ? measure.paybackPeriod.toFixed(1) : 'N/A'
+      ];
+      
+      renderTableRow(currentY, cells, columnWidths);
+      currentY += 20;
+    });
+    } else {
+      // If no measures, add a message
+      doc.text('No water efficiency measures available.', doc.page.margins.left, currentY);
+      currentY += 20;
+    }
+    doc.moveDown(2);
+    
+    // D. Existing Conditions and Observations
+    doc.fontSize(14)
+       .fillColor(sectionGrey)
+       .font('Helvetica-Bold')
+       .text('D. Existing Conditions and Observations:', { align: 'left' });
+    doc.moveDown();
+    
+    // Add null check for existingConditions array
+    if (existingConditions && Array.isArray(existingConditions)) {
+      existingConditions.forEach((condition: any) => {
+        doc.fontSize(12)
+           .fillColor('#000000')
+           .font('Helvetica-Bold')
+           .text(condition.title);
+        doc.moveDown(0.5);
+        
+        doc.fontSize(10)
+           .font('Helvetica')
+           .text(condition.description);
+        doc.moveDown(1);
+      });
+      doc.moveDown(2);
+    } else {
+      // If no existing conditions, add a message
+      doc.fontSize(10)
+         .font('Helvetica')
+         .text('No existing conditions data available.');
+      doc.moveDown(2);
+    }
+    
+    // E. Water Efficiency Measures Recommended
+    doc.fontSize(14)
+       .fillColor(sectionGrey)
+       .font('Helvetica-Bold')
+       .text('E. Water Efficiency Measures Recommended:', { align: 'left' });
+    doc.moveDown();
+    
+    // Add null check for recommended measures
+    if (measures && Array.isArray(measures)) {
+      const recommendedMeasures = measures.filter((m: any) => m.status === 'recommended');
+      if (recommendedMeasures.length > 0) {
+        recommendedMeasures.forEach((measure: any) => {
+          doc.fontSize(12)
+             .fillColor('#000000')
+             .font('Helvetica-Bold')
+             .text(measure.name);
+          doc.moveDown(0.5);
+          
+          doc.fontSize(10)
+             .font('Helvetica')
+             .text(measure.description);
+          doc.moveDown(0.5);
+          
+          doc.fontSize(10)
+             .font('Helvetica-Bold')
+             .text(`Estimated Annual Savings: ${this.formatNumber(measure.annualSavings)} gallons (${this.formatCurrency(measure.costSavings)})`);
+          doc.moveDown(1);
+        });
+    doc.moveDown(2);
+    
+    // F. WEMs Already Implemented
+    doc.fontSize(14)
+       .fillColor(sectionGrey)
+       .font('Helvetica-Bold')
+       .text('F. WEMs Already Implemented:', { align: 'left' });
+    doc.moveDown();
+    
+    // Add null check for implemented measures
+    if (measures && Array.isArray(measures)) {
+      const implementedMeasures = measures.filter((m: any) => m.status === 'implemented');
+      if (implementedMeasures.length > 0) {
+        implementedMeasures.forEach((measure: any) => {
+      doc.fontSize(12)
+         .fillColor('#000000')
+         .font('Helvetica-Bold')
+         .text(measure.name);
+      doc.moveDown(0.5);
+      
+      doc.fontSize(10)
+         .font('Helvetica')
+         .text(measure.description);
+      doc.moveDown(0.5);
+      
+      doc.fontSize(10)
+         .font('Helvetica-Bold')
+         .text(`Annual Savings: ${this.formatNumber(measure.annualSavings)} gallons (${this.formatCurrency(measure.costSavings)})`);
+          doc.moveDown(1);
+        });
+    doc.moveDown(2);
+    
+    // G. WEMs to Consider
+    doc.fontSize(14)
+       .fillColor(sectionGrey)
+       .font('Helvetica-Bold')
+       .text('G. WEMs to Consider:', { align: 'left' });
+    doc.moveDown();
+    
+    // Add null check for measures to consider
+    if (measures && Array.isArray(measures)) {
+      const measuresToConsider = measures.filter((m: any) => m.status === 'to_consider');
+      if (measuresToConsider.length > 0) {
+        measuresToConsider.forEach((measure: any) => {
+      doc.fontSize(12)
+         .fillColor('#000000')
+         .font('Helvetica-Bold')
+         .text(measure.name);
+      doc.moveDown(0.5);
+      
+      doc.fontSize(10)
+         .font('Helvetica')
+         .text(measure.description);
+      doc.moveDown(0.5);
+      
+      doc.fontSize(10)
+         .font('Helvetica-Bold')
+         .text(`Potential Annual Savings: ${this.formatNumber(measure.annualSavings)} gallons (${this.formatCurrency(measure.costSavings)})`);
+          doc.moveDown(1);
+        });
+    doc.moveDown(2);
+    
+    // H. WEMs Requiring Further Investigation
+    doc.fontSize(14)
+       .fillColor(sectionGrey)
+       .font('Helvetica-Bold')
+       .text('H. WEMs Requiring Further Investigation:', { align: 'left' });
+    doc.moveDown();
+    
+    // Add null check for measures requiring investigation
+    if (measures && Array.isArray(measures)) {
+      const measuresRequiringInvestigation = measures.filter((m: any) => m.status === 'requires_investigation');
+      if (measuresRequiringInvestigation.length > 0) {
+        measuresRequiringInvestigation.forEach((measure: any) => {
+      doc.fontSize(12)
+         .fillColor('#000000')
+         .font('Helvetica-Bold')
+         .text(measure.name);
+      doc.moveDown(0.5);
+      
+      doc.fontSize(10)
+         .font('Helvetica')
+         .text(measure.description);
+      doc.moveDown(0.5);
+      
+      doc.fontSize(10)
+         .font('Helvetica-Bold')
+         .text(`Reason for Investigation: ${measure.investigationReason}`);
+          doc.moveDown(1);
+        });
+    doc.moveDown(2);
+    
+    // I. Water Use Analysis
+    doc.fontSize(14)
+       .fillColor(sectionGrey)
+       .font('Helvetica-Bold')
+       .text('I. Water Use Analysis:', { align: 'left' });
+    doc.moveDown();
+    
+    // I.1 Total Water Usage
+    doc.fontSize(12)
+       .fillColor('#000000')
+       .font('Helvetica-Bold')
+       .text('1. Total Water Usage:');
+    doc.moveDown(0.5);
+    
+    doc.fontSize(10)
+       .font('Helvetica')
+       .text(`Total Annual Water Usage: ${this.formatNumber(totalUsage.water)} gallons`);
+    doc.moveDown(0.5);
+    doc.text(`Water Use Intensity (WUI): ${this.formatNumber(totalUsage.water / 1000)} gallons/sqft/year`);
+    doc.moveDown(2);
+    
+    // I.2 Monthly Water Usage
+    doc.fontSize(12)
+       .fillColor('#000000')
+       .font('Helvetica-Bold')
+       .text('2. Monthly Water Usage:');
+    doc.moveDown();
+    
+    const monthlyHeaderY = doc.y;
+    const monthlyColumnWidths = [100, 150, 150];
+    const monthlyHeaderCells = ['Month', 'Usage (gallons)', 'Cost'];
+    
+    // Draw header background
+    doc.rect(doc.page.margins.left, monthlyHeaderY, 
+             monthlyColumnWidths.reduce((a, b) => a + b, 0), 20)
+       .fill('#f5f5f5');
+    
+    // Header text
+    doc.fontSize(10)
+       .fillColor(sectionGrey)
+       .font('Helvetica-Bold');
+    renderTableRow(monthlyHeaderY + 5, monthlyHeaderCells, monthlyColumnWidths);
+    
+    // Table content
+    doc.fontSize(10)
+       .fillColor('#000000')
+       .font('Helvetica');
+    
+    currentY = monthlyHeaderY + 25;
+    // Add null check for monthly water data
+    if (monthlyData && monthlyData.water && Array.isArray(monthlyData.water)) {
+      // Add null check for monthly water data
+    if (monthlyData && monthlyData.water && Array.isArray(monthlyData.water)) {
+      monthlyData.water.forEach((month: any) => {
+      if (currentY > doc.page.height - doc.page.margins.bottom) {
+        doc.addPage();
+        currentY = doc.page.margins.top;
+      }
+      
+      const cells = [
+        month.month || '',
+        this.formatNumber(month.usage || 0),
+        this.formatCurrency(month.cost || 0)
+      ];
+      
+      renderTableRow(currentY, cells, monthlyColumnWidths);
+      currentY += 20;
+    });
+    } else {
+      // If no monthly data, add a message
+      doc.text('No monthly water usage data available.', doc.page.margins.left, currentY);
+      currentY += 20;
+    }
+    } else {
+      // If no monthly data, add a message
+      doc.text('No monthly water usage data available.', doc.page.margins.left, currentY);
+      currentY += 20;
+    }
+    
+    // Add a page break after the section
+    doc.addPage();
+  }
+} 

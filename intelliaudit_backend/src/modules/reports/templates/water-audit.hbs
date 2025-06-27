@@ -1,0 +1,255 @@
+<!-- Water Audit Section -->
+
+<style>
+  /* Metrics boxes for water efficiency measures */
+  .metrics-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 15px 0 25px 0;
+  }
+
+  .metric-box {
+    padding: 12px 15px;
+    border-radius: 4px;
+    min-width: 160px;
+    flex: 1;
+  }
+
+  .metric-label {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  /* Box-specific colors */
+  .cost-savings {
+    background-color: #ebffee;
+  }
+
+  .cost-savings .metric-label {
+    color: #006837;
+  }
+
+  .water-savings {
+    background-color: #ebf9ff;
+  }
+
+  .water-savings .metric-label {
+    color: #005994;
+  }
+
+  .payback-period {
+    background-color: #f9ebff;
+  }
+
+  .payback-period .metric-label {
+    color: #8130a7;
+  }
+</style>
+
+<h2 id="water-audit-introduction">A. Introduction</h2>
+<p>
+  This Water Audit report presents the findings of a water audit conducted at {{project.property_address}}.
+  The audit includes an analysis of the building's water usage, identification of water conservation measures,
+  and recommendations for implementation.
+</p>
+
+<h2 id="water-audit-procedures">B. Water Audit Procedures</h2>
+<p>
+  The water audit was conducted using the following procedures:
+</p>
+<ol>
+  <li>On-site facility survey of existing water-using fixtures, equipment, systems, and processes</li>
+  <li>Interview with operations and maintenance personnel</li>
+  <li>Analysis of water bills and usage patterns</li>
+  <li>Identification of water conservation opportunities</li>
+  <li>Development of water efficiency measures</li>
+  <li>Financial analysis of proposed measures</li>
+</ol>
+
+<h2 id="wems-cost-savings-summary-table">C. WEMs Cost Savings Summary Table</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Measure</th>
+      <th class="text-right">Annual Savings (gal)</th>
+      <th class="text-right">Cost Savings ($)</th>
+      <th class="text-right">Implementation Cost ($)</th>
+      <th class="text-right">Payback (years)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each waterMeasures}}
+    <tr>
+      <td>{{title}}</td>
+      <td class="text-right">{{formatNumber estimatedSavings.water}}</td>
+      <td class="text-right">{{formatCurrency estimatedSavings.cost}}</td>
+      <td class="text-right">{{formatCurrency implementationCost}}</td>
+      <td class="text-right">{{formatNumber estimatedSavings.paybackPeriod 1}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="5" class="text-center">No water efficiency measures available</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h2 id="existing-conditions-observations-water">D. Existing Conditions and Observations</h2>
+
+<h3 id="domestic-indoor-water-use">1. Domestic Indoor Water Use</h3>
+<p>
+  {{#if domesticWaterUse}}{{domesticWaterUse}}{{else}}The building's domestic indoor water use includes restroom
+  fixtures (toilets, urinals, faucets), kitchen sinks, and drinking fountains. Many of the fixtures are original to the
+  building and do not meet current water efficiency standards. There are opportunities for water savings through fixture
+  upgrades.{{/if}}
+</p>
+
+<h3 id="non-domestic-indoor-water-use">2. Non-Domestic Indoor Water Use (CT, HVAC)</h3>
+<p>
+  {{#if nonDomesticWaterUse}}{{nonDomesticWaterUse}}{{else}}The building's non-domestic indoor water use includes
+  cooling towers and HVAC systems. The cooling tower does not have adequate controls for optimizing water use. There are
+  opportunities for water savings through equipment upgrades and control system improvements.{{/if}}
+</p>
+
+<h3 id="outdoor-water-use">3. Outdoor Water Use (Irrigation & Landscaping)</h3>
+<p>
+  {{#if outdoorWaterUse}}{{outdoorWaterUse}}{{else}}The building's outdoor water use includes irrigation for
+  landscaping. The irrigation system is manually controlled and does not have weather-based controls. There are
+  opportunities for water savings through irrigation system upgrades and drought-tolerant landscaping.{{/if}}
+</p>
+
+<h3 id="industrial-process-water-use">4. Industrial Process Water use</h3>
+<p>
+  {{#if industrialWaterUse}}{{industrialWaterUse}}{{else}}The building does not have any industrial process water
+  use.{{/if}}
+</p>
+
+<h2 id="water-efficiency-measures-recommended">E. Water Efficiency Measures Recommended</h2>
+
+{{#each waterMeasures}}
+<h3 id="wem-{{@index}}">WEM {{add @index 1}}: {{title}}</h3>
+<p>
+  <strong>Description:</strong> {{recommendation}}
+</p>
+
+<!-- Metrics boxes for key values -->
+<div class="metrics-container">
+  <div class="metric-box cost-savings">
+    <div class="metric-label">Annual Cost Savings</div>
+    <div class="metric-value">${{formatNumber estimatedSavings.cost 0}}</div>
+  </div>
+
+  <div class="metric-box water-savings">
+    <div class="metric-label">Water Savings</div>
+    <div class="metric-value">{{formatNumber estimatedSavings.water 0}} gal/year</div>
+  </div>
+
+  <div class="metric-box payback-period">
+    <div class="metric-label">Payback Period</div>
+    <div class="metric-value">{{formatNumber estimatedSavings.paybackPeriod 1}} years</div>
+  </div>
+</div>
+
+{{else}}
+<p>No water efficiency measures have been identified at this time.</p>
+{{/each}}
+
+<h2 id="wems-already-implemented">F. WEMs Already Implemented</h2>
+<p>
+  {{#if implementedWaterMeasures}}
+  The following water efficiency measures have already been implemented:
+<ul>
+  {{#each implementedWaterMeasures}}
+  <li>{{this}}</li>
+  {{/each}}
+</ul>
+{{else}}
+No water efficiency measures have been previously implemented.
+{{/if}}
+</p>
+
+<h2 id="wems-to-consider">G. WEMs to Consider</h2>
+{{#if waterMeasuresToConsider}}
+{{#each waterMeasuresToConsider}}
+<h3>{{this.title}}</h3>
+<p>{{this.recommendation}}</p>
+{{/each}}
+{{else}}
+<p>No additional water efficiency measures to consider at this time.</p>
+{{/if}}
+
+<h2 id="wems-requiring-further-investigation">H. WEMs Requiring Further Investigation</h2>
+{{#if waterMeasuresForInvestigation}}
+{{#each waterMeasuresForInvestigation}}
+<h3>{{this.title}}</h3>
+<p>{{this.recommendation}}</p>
+{{/each}}
+{{else}}
+<p>No water efficiency measures requiring further investigation at this time.</p>
+{{/if}}
+
+<h2 id="non-efficiency-water-measures">I. Non-Efficiency Water Measure/s</h2>
+{{#if nonEfficiencyWaterMeasures}}
+{{#each nonEfficiencyWaterMeasures}}
+<h3>{{this.title}}</h3>
+<p>{{this.recommendation}}</p>
+{{/each}}
+{{else}}
+<p>No non-efficiency water measures have been identified at this time.</p>
+{{/if}}
+
+<h2 id="water-use-analysis">J. Water Use Analysis</h2>
+
+<h3 id="building-water-use-intensity">1. Building Water Use Intensity (WUI)</h3>
+<p>
+  The building's water use intensity is {{formatNumber waterUseIntensity 2}} gallons per square foot per year.
+</p>
+
+<h3 id="energy-star-water-scorecard">2. ENERGY STAR® Water Scorecard</h3>
+<p>
+  {{#if waterScorecard}}
+  The building has a water score of {{waterScorecard.score}}. This places the building in the
+  {{waterScorecard.percentile}} percentile compared to similar buildings nationwide.
+  {{else}}
+  ENERGY STAR water benchmarking has not been performed for this building.
+  {{/if}}
+</p>
+
+<h3 id="water-usage-and-cost">3. Water Usage and Cost</h3>
+<p>
+  The building's annual water consumption is {{formatNumber totalUsage.waterUsage}} gallons, with an average monthly
+  consumption of {{formatNumber monthlyAvgWater}} gallons.
+</p>
+
+<h3 id="water-balance-chart">4. Water Balance Chart</h3>
+<p>
+  The following chart shows the breakdown of water usage by end use:
+</p>
+<!-- Insert chart here -->
+
+<h3 id="water-consumption-table">5. Water Consumption Table</h3>
+<table>
+  <thead>
+    <tr>
+      <th>Month</th>
+      <th class="text-right">Usage (gallons)</th>
+      <th class="text-right">Cost ($)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each monthlyData.water}}
+    <tr>
+      <td>{{this.month}}</td>
+      <td class="text-right">{{formatNumber this.usage}}</td>
+      <td class="text-right">{{formatCurrency this.cost}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>

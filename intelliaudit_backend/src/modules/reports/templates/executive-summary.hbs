@@ -1,0 +1,170 @@
+<!-- Executive Summary Section -->
+
+<h2 id="introduction">A. Introduction:</h2>
+<p>
+  This report presents the findings of an ASHRAE Level II Energy Audit, Water Audit, and Retro-commissioning (RCx) study
+  conducted at
+  <strong>{{project.property_address}}</strong>. The analysis identified potential annual savings of
+  <strong>{{formatCurrency potentialSavings}}</strong> through the implementation of energy and water efficiency
+  measures.
+  The property currently has an annual energy consumption of <strong>{{formatNumber
+    totalUsage.totalEnergyUsage}}</strong> kWh
+  and water consumption of <strong>{{formatNumber totalUsage.waterUsage}}</strong> gallons.
+  The recommended measures include
+  {{#if recommendations.length}}
+  {{#each recommendations}}
+  {{#if @last}}and {{/if}}{{this.title}}{{#unless @last}}, {{/unless}}
+  {{/each}}
+  {{else}}
+  lighting upgrades, HVAC optimization, and water conservation measures
+  {{/if}}.
+</p>
+
+<p>
+  At the request of <strong>{{project.company_name}}</strong>, Vert Energy Group (VEG) performed ASHRAE Level II Energy
+  Audit,
+  Water Audit and a retro-commissioning (RCx) study of the base building systems at
+  <strong>{{project.property_address}}</strong>.
+  Built in <strong>{{project.property_year_built}}</strong>, this <strong>{{project.building_type}}</strong> building is
+  comprised of
+  <strong>{{project.description}}</strong>. The <strong>{{project.building_type}}</strong> portion of this property has
+  a gross floor area of
+  <strong>{{formatNumber project.property_gross_floor_area}}</strong> ft².
+</p>
+
+<p>
+  The study is referred to as The Existing Buildings Energy and Water Efficiency (EBEWE) Program, was established by Los
+  Angeles Municipal Code (LAMC)
+  Division 97, Article 1, Chapter IX with the purpose of reducing energy and water consumption by building in the City
+  of Los Angeles.
+  The efficiency improvements (if implemented) will lower the use of energy, water, and greenhouse gas emissions
+  citywide.
+</p>
+
+<h2 id="summary-tables">B. Summary Tables</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th class="text-right">Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Total Building Area</td>
+      <td class="text-right">{{formatNumber project.property_gross_floor_area}} ft²</td>
+    </tr>
+    <tr>
+      <td>Building Type</td>
+      <td class="text-right">{{project.building_type}}</td>
+    </tr>
+    <tr>
+      <td>Year Built</td>
+      <td class="text-right">{{project.property_year_built}}</td>
+    </tr>
+    <tr>
+      <td>Annual Energy Usage</td>
+      <td class="text-right">{{formatNumber totalUsage.totalEnergyUsage}} kWh</td>
+    </tr>
+    <tr>
+      <td>Annual Water Usage</td>
+      <td class="text-right">{{formatNumber totalUsage.waterUsage}} gallons</td>
+    </tr>
+    <tr>
+      <td>Potential Annual Savings</td>
+      <td class="text-right">{{formatCurrency potentialSavings}}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="eems-wems-rcms-performance-analysis-summary">C. EEMs, WEMs & RCMs Performance Analysis Summary</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Measure</th>
+      <th class="text-right">Annual Savings (kWh)</th>
+      <th class="text-right">Cost Savings ($)</th>
+      <th class="text-right">Implementation Cost ($)</th>
+      <th class="text-right">Payback (years)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each measures}}
+    <tr>
+      <td>{{title}}</td>
+      <td class="text-right">{{formatNumber estimatedSavings.energy 1}}</td>
+      <td class="text-right">{{formatCurrency estimatedSavings.cost}}</td>
+      <td class="text-right">{{formatCurrency implementationCost}}</td>
+      <td class="text-right">{{formatNumber estimatedSavings.paybackPeriod 1}}</td>
+    </tr>
+    {{/each}}
+    {{#each waterMeasures}}
+    <tr>
+      <td>{{name}}</td>
+      <td class="text-right">N/A</td>
+      <td class="text-right">{{formatCurrency costSavings}}</td>
+      <td class="text-right">{{formatCurrency implementationCost}}</td>
+      <td class="text-right">{{formatNumber paybackPeriod 1}}</td>
+    </tr>
+    {{/each}}
+    {{#each recommendations}}
+    <tr>
+      <td>{{name}}</td>
+      <td class="text-right">{{formatNumber annualSavings}}</td>
+      <td class="text-right">{{formatCurrency costSavings}}</td>
+      <td class="text-right">{{formatCurrency implementationCost}}</td>
+      <td class="text-right">{{formatNumber paybackPeriod 1}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h2 id="eem-wem-rcm-financial-analysis-summary">D. EEM, WEM & RCM Financial Analysis Summary</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th class="text-right">Total Cost Savings</th>
+      <th class="text-right">Total Implementation Cost</th>
+      <th class="text-right">Average Payback</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Energy Efficiency Measures</td>
+      <td class="text-right">{{formatCurrency energySavings}}</td>
+      <td class="text-right">{{formatCurrency energyImplementationCost}}</td>
+      <td class="text-right">{{formatNumber energyPayback 1}} years</td>
+    </tr>
+    <tr>
+      <td>Water Efficiency Measures</td>
+      <td class="text-right">{{formatCurrency waterSavings}}</td>
+      <td class="text-right">{{formatCurrency waterImplementationCost}}</td>
+      <td class="text-right">{{formatNumber waterPayback 1}} years</td>
+    </tr>
+    <tr>
+      <td>Retro-commissioning Measures</td>
+      <td class="text-right">{{formatCurrency rcxSavings}}</td>
+      <td class="text-right">{{formatCurrency rcxImplementationCost}}</td>
+      <td class="text-right">{{formatNumber rcxPayback 1}} years</td>
+    </tr>
+    <tr>
+      <td><strong>Total</strong></td>
+      <td class="text-right"><strong>{{formatCurrency totalSavings}}</strong></td>
+      <td class="text-right"><strong>{{formatCurrency totalImplementationCost}}</strong></td>
+      <td class="text-right"><strong>{{formatNumber totalPayback 1}} years</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="next-steps">E. Next Steps</h2>
+<p>
+  Based on the findings of this report, we recommend the following next steps:
+</p>
+<ol>
+  <li>Review the recommended measures and prioritize implementation based on payback period and available budget.</li>
+  <li>Develop an implementation plan for the selected measures.</li>
+  <li>Explore available rebates and incentives to reduce implementation costs.</li>
+  <li>Implement the selected measures and monitor results.</li>
+  <li>Continue to track energy and water usage to verify savings.</li>
+</ol>

@@ -1,0 +1,80 @@
+/* Print styles for shareable report */
+@media print {
+  /* Hide elements that shouldn't be printed */
+  .print-hidden,
+  button,
+  .fixed {
+    display: none !important;
+  }
+   
+  /* Show all sections when printing */
+  .hidden {
+    display: block !important;
+  }
+  
+  /* Reset margins and padding for printing */
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: white;
+    color: black;
+  }
+  
+  /* Ensure content spans the full page width with proper centering */
+  main {
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 1.5cm !important;
+  }
+  
+  /* Add page breaks before major sections */
+  .page-break-before {
+    page-break-before: always;
+  }
+  
+  /* Avoid breaking inside certain elements */
+  table, figure, .no-break-inside {
+    page-break-inside: avoid;
+  }
+  
+  /* Ensure dark mode doesn't affect print */
+  .dark * {
+    color: black !important;
+    background-color: white !important;
+    border-color: #ddd !important;
+  }
+  
+  /* Make text black for better printing */
+  h1, h2, h3, h4, h5, h6, p, span, div, td, th, li {
+    color: black !important;
+  }
+  
+  /* Add a light border to cards for better visual separation */
+  .bg-white, .rounded-lg {
+    border: 1px solid #eee !important;
+    box-shadow: none !important;
+  }
+  
+  /* Make sure charts are visible */
+  canvas {
+    max-width: 100%;
+    height: auto !important;
+  }
+  
+  /* Header and footer styles for print */
+  @page {
+    margin: 1cm;
+  }
+  
+  /* Force background colors for certain elements */
+  .bg-emerald-50, .bg-emerald-100, .bg-emerald-600, .bg-emerald-700 {
+    background-color: white !important;
+    border: 1px solid #ccc !important;
+  }
+  
+  /* Make sure images print correctly */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+} 

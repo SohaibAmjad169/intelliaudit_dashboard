@@ -1,0 +1,337 @@
+<!-- Retro-commissioning Section -->
+
+<h2 id="retro-commissioning-introduction">A. Introduction</h2>
+<p>
+  This Retro-commissioning (RCx) report presents the findings of a retro-commissioning study conducted at
+  {{project.property_address}}.
+  This Retro-commissioning (RCx) report presents the findings of a retro-commissioning study conducted at
+  {{project.property_address}}.
+  The study includes an analysis of the building's systems, identification of operational improvements,
+  and recommendations for implementation.
+</p>
+
+<h2 id="objectives">B. Objectives</h2>
+<p>
+  The objectives of the retro-commissioning study were to:
+</p>
+<ol>
+  <li>Identify and resolve operating problems in the building's systems</li>
+  <li>Optimize the performance of existing equipment</li>
+  <li>Improve occupant comfort and indoor air quality</li>
+  <li>Reduce energy consumption and operating costs</li>
+  <li>Extend equipment life</li>
+</ol>
+
+<h2 id="overview-of-results">C. Overview of Results</h2>
+<p>
+  The retro-commissioning study identified several opportunities for improving the operation of the building's systems.
+  Implementation of the recommended measures is expected to result in annual energy savings of
+  {{formatNumber rcxEnergySavings}} kWh and cost savings of {{formatCurrency rcxCostSavings}}.
+</p>
+
+<h2 id="rcms-cost-savings-summary-table">D. RCMs Cost Savings Summary Table</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Measure</th>
+      <th class="text-right">Annual Savings (kWh)</th>
+      <th class="text-right">Cost Savings ($)</th>
+      <th class="text-right">Implementation Cost ($)</th>
+      <th class="text-right">Payback (years)</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each recommendations}}
+    <tr>
+      <td>{{name}}{{title}}</td>
+      <td class="text-right">{{formatNumber annualSavings}}{{formatNumber estimatedSavings.energy}}</td>
+      <td class="text-right">{{formatCurrency costSavings}}{{formatCurrency estimatedSavings.cost}}</td>
+      <td>{{name}}{{title}}</td>
+      <td class="text-right">{{formatNumber annualSavings}}{{formatNumber estimatedSavings.energy}}</td>
+      <td class="text-right">{{formatCurrency costSavings}}{{formatCurrency estimatedSavings.cost}}</td>
+      <td class="text-right">{{formatCurrency implementationCost}}</td>
+      <td class="text-right">{{formatNumber paybackPeriod 1}}{{formatNumber estimatedSavings.paybackPeriod 1}}</td>
+      <td class="text-right">{{formatNumber paybackPeriod 1}}{{formatNumber estimatedSavings.paybackPeriod 1}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="5" class="text-center">No retro-commissioning measures available</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h2 id="overview-of-project-steps">E. Overview of Project Steps</h2>
+<p>
+  The retro-commissioning project was conducted using the following steps:
+</p>
+<ol>
+  <li>Planning Phase: Develop project goals, scope, and schedule</li>
+  <li>Investigation Phase: Conduct site assessment, review documentation, and perform diagnostic testing</li>
+  <li>Implementation Phase: Implement selected measures and verify results</li>
+  <li>Hand-off Phase: Provide training and documentation to facility staff</li>
+</ol>
+
+<h2 id="retro-commissioning-plan">F. Retro-commissioning Plan</h2>
+<p>
+  The retro-commissioning plan includes the following systems and components:
+</p>
+
+<h4>Cooling systems</h4>
+<p>
+  {{#if coolingSystems}}{{coolingSystems}}{{else}}The cooling systems were evaluated for proper operation, including
+  temperature setpoints, control sequences, and equipment performance. Several opportunities for improvement were
+  identified, including optimizing chiller operation and air handling unit control.{{/if}}
+  {{#if coolingSystems}}{{coolingSystems}}{{else}}The cooling systems were evaluated for proper operation, including
+  temperature setpoints, control sequences, and equipment performance. Several opportunities for improvement were
+  identified, including optimizing chiller operation and air handling unit control.{{/if}}
+</p>
+
+<h4>Heating systems</h4>
+<p>
+  {{#if heatingSystems}}{{heatingSystems}}{{else}}The heating systems were evaluated for proper operation, including
+  temperature setpoints, control sequences, and equipment performance. Several opportunities for improvement were
+  identified, including optimizing boiler operation and heating water temperature reset.{{/if}}
+  {{#if heatingSystems}}{{heatingSystems}}{{else}}The heating systems were evaluated for proper operation, including
+  temperature setpoints, control sequences, and equipment performance. Several opportunities for improvement were
+  identified, including optimizing boiler operation and heating water temperature reset.{{/if}}
+</p>
+
+<h4>Lighting systems & Control</h4>
+<p>
+  {{#if lightingControls}}{{lightingControls}}{{else}}The lighting systems and controls were evaluated for proper
+  operation, including scheduling, occupancy sensing, and daylight harvesting. Several opportunities for improvement
+  were identified, including optimizing lighting schedules and implementing advanced control strategies.{{/if}}
+  {{#if lightingControls}}{{lightingControls}}{{else}}The lighting systems and controls were evaluated for proper
+  operation, including scheduling, occupancy sensing, and daylight harvesting. Several opportunities for improvement
+  were identified, including optimizing lighting schedules and implementing advanced control strategies.{{/if}}
+</p>
+
+<h4>EMS/BMS System and Controls</h4>
+<p>
+  {{#if bmsSystem}}{{bmsSystem}}{{else}}The building management system (BMS) was evaluated for proper operation,
+  including control sequences, setpoints, and scheduling. Several opportunities for improvement were identified,
+  including optimizing control sequences and implementing demand-based control strategies.{{/if}}
+  {{#if bmsSystem}}{{bmsSystem}}{{else}}The building management system (BMS) was evaluated for proper operation,
+  including control sequences, setpoints, and scheduling. Several opportunities for improvement were identified,
+  including optimizing control sequences and implementing demand-based control strategies.{{/if}}
+</p>
+
+<h4>Domestic hot water equipment</h4>
+<p>
+  {{#if dhwEquipment}}{{dhwEquipment}}{{else}}The domestic hot water equipment was evaluated for proper operation,
+  including temperature setpoints and recirculation control. Several opportunities for improvement were identified,
+  including optimizing temperature setpoints and implementing time-based control strategies.{{/if}}
+  {{#if dhwEquipment}}{{dhwEquipment}}{{else}}The domestic hot water equipment was evaluated for proper operation,
+  including temperature setpoints and recirculation control. Several opportunities for improvement were identified,
+  including optimizing temperature setpoints and implementing time-based control strategies.{{/if}}
+</p>
+
+<h4>Irrigation system</h4>
+<p>
+  {{#if irrigationSystem}}{{irrigationSystem}}{{else}}The irrigation system was evaluated for proper operation,
+  including scheduling and control. Several opportunities for improvement were identified, including implementing
+  weather-based control and optimizing irrigation schedules.{{/if}}
+  {{#if irrigationSystem}}{{irrigationSystem}}{{else}}The irrigation system was evaluated for proper operation,
+  including scheduling and control. Several opportunities for improvement were identified, including implementing
+  weather-based control and optimizing irrigation schedules.{{/if}}
+</p>
+
+<h2 id="functional-performance-test-methodology">G. Functional Performance Test Methodology</h2>
+<p>
+  The following methods were used to evaluate the performance of the building's systems:
+</p>
+
+<h4>Stand-Alone Portable Data Loggers</h4>
+<p>
+  Data loggers were used to monitor temperature, humidity, pressure, and power consumption at various points in the
+  building's systems.
+  Data loggers were used to monitor temperature, humidity, pressure, and power consumption at various points in the
+  building's systems.
+</p>
+
+<h4>BAS Trend Data</h4>
+<p>
+  Trend data from the building automation system (BAS) was analyzed to evaluate system performance and identify
+  operational issues.
+  Trend data from the building automation system (BAS) was analyzed to evaluate system performance and identify
+  operational issues.
+</p>
+
+<h4>System & Equipment Tests</h4>
+<p>
+  Functional performance tests were conducted on selected systems and equipment to verify proper operation and identify
+  opportunities for improvement.
+  Functional performance tests were conducted on selected systems and equipment to verify proper operation and identify
+  opportunities for improvement.
+</p>
+
+<h4>Spot Measurements</h4>
+<p>
+  Spot measurements of temperature, humidity, pressure, and airflow were taken at various points in the building's
+  systems to verify proper operation.
+  Spot measurements of temperature, humidity, pressure, and airflow were taken at various points in the building's
+  systems to verify proper operation.
+</p>
+
+<h4>Observation</h4>
+<p>
+  Visual observations of equipment and systems were made to identify operational issues and opportunities for
+  improvement.
+  Visual observations of equipment and systems were made to identify operational issues and opportunities for
+  improvement.
+</p>
+
+<h2 id="assessment-team">H. Assessment Team</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Organization</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each teamMembers}}
+    <tr>
+      <td>{{name}}</td>
+      <td>{{role}}</td>
+      <td>{{organization}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="3" class="text-center">No team members information available</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h2 id="functional-performance-test-findings-recommendations">I. Functional Performance Test Findings & Recommendations
+</h2>
+
+<style>
+  /* Metrics boxes for retro-commissioning measures */
+  .metrics-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 15px 0 25px 0;
+  }
+
+  .metric-box {
+    padding: 12px 15px;
+    border-radius: 4px;
+    min-width: 160px;
+    flex: 1;
+  }
+
+  .metric-label {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  /* Box-specific colors */
+  .cost-savings {
+    background-color: #ebffee;
+  }
+
+  .cost-savings .metric-label {
+    color: #006837;
+  }
+
+  .energy-savings {
+    background-color: #ebf9ff;
+  }
+
+  .energy-savings .metric-label {
+    color: #005994;
+  }
+
+  .payback-period {
+    background-color: #f9ebff;
+  }
+
+  .payback-period .metric-label {
+    color: #8130a7;
+  }
+</style>
+
+{{#each recommendations}}
+<h3 id="rcm-{{@index}}">RCM {{add @index 1}}: {{name}}{{title}}</h3>
+<h3 id="rcm-{{@index}}">RCM {{add @index 1}}: {{name}}{{title}}</h3>
+<p>
+  <strong>Description:</strong> {{description}}{{recommendation}}
+  <strong>Description:</strong> {{description}}{{recommendation}}
+</p>
+<p>
+  <strong>Findings:</strong> {{findings}}{{existingCondition}}
+  <strong>Findings:</strong> {{findings}}{{existingCondition}}
+</p>
+<p>
+  <strong>Recommendations:</strong> {{recommendations}}{{recommendation}}
+</p>
+
+<!-- Metrics boxes for key values -->
+<div class="metrics-container">
+  <div class="metric-box cost-savings">
+    <div class="metric-label">Annual Cost Savings</div>
+    <div class="metric-value">${{#if costSavings}}{{formatNumber costSavings 0}}{{else}}{{formatNumber
+      estimatedSavings.cost 0}}{{/if}}</div>
+  </div>
+
+  <div class="metric-box energy-savings">
+    <div class="metric-label">Energy Savings</div>
+    <div class="metric-value">{{#if annualSavings}}{{formatNumber annualSavings 0}}{{else}}{{formatNumber
+      estimatedSavings.energy 0}}{{/if}} kWh/year</div>
+  </div>
+
+  <div class="metric-box payback-period">
+    <div class="metric-label">Payback Period</div>
+    <div class="metric-value">{{#if paybackPeriod}}{{formatNumber paybackPeriod 1}}{{else}}{{formatNumber
+      estimatedSavings.paybackPeriod 1}}{{/if}} years</div>
+  </div>
+</div>
+
+  <strong>Recommendations:</strong> {{recommendations}}{{recommendation}}
+</p>
+
+<!-- Metrics boxes for key values -->
+<div class="metrics-container">
+  <div class="metric-box cost-savings">
+    <div class="metric-label">Annual Cost Savings</div>
+    <div class="metric-value">${{#if costSavings}}{{formatNumber costSavings 0}}{{else}}{{formatNumber
+      estimatedSavings.cost 0}}{{/if}}</div>
+  </div>
+
+  <div class="metric-box energy-savings">
+    <div class="metric-label">Energy Savings</div>
+    <div class="metric-value">{{#if annualSavings}}{{formatNumber annualSavings 0}}{{else}}{{formatNumber
+      estimatedSavings.energy 0}}{{/if}} kWh/year</div>
+  </div>
+
+  <div class="metric-box payback-period">
+    <div class="metric-label">Payback Period</div>
+    <div class="metric-value">{{#if paybackPeriod}}{{formatNumber paybackPeriod 1}}{{else}}{{formatNumber
+      estimatedSavings.paybackPeriod 1}}{{/if}} years</div>
+  </div>
+</div>
+
+{{else}}
+<p>No retro-commissioning measures have been identified at this time.</p>
+{{/each}}
+
+<h2 id="operational-training">J. Operational Training</h2>
+<p>
+  {{#if operationalTraining}}{{operationalTraining}}{{else}}Operational training was provided to facility staff on the
+  proper operation and maintenance of building systems. The training included hands-on demonstrations, review of control
+  sequences, and discussion of best practices for system operation and maintenance.{{/if}}
+  {{#if operationalTraining}}{{operationalTraining}}{{else}}Operational training was provided to facility staff on the
+  proper operation and maintenance of building systems. The training included hands-on demonstrations, review of control
+  sequences, and discussion of best practices for system operation and maintenance.{{/if}}
+</p>

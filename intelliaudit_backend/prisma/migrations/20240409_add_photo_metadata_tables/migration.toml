@@ -1,0 +1,5 @@
+# Prisma Migration metadata file
+# This file describes the migration's metadata and is required for the Prisma CLI
+
+migration_name = "20240409_add_photo_metadata_tables"
+checksum = "b9b7e9b9ce9c6b3afeb2caf59eceba24a09fb0b" 

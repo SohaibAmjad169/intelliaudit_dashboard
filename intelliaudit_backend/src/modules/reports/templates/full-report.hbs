@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASHRAE Level II Energy Audit, Water Audit & Retro-commissioning Report</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11pt;
+      line-height: 1.4;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      font-size: 18pt;
+      color: #4d9b58;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      page-break-after: avoid;
+    }
+
+    h2 {
+      font-size: 14pt;
+      color: #4A4A4A;
+      margin-top: 15px;
+      margin-bottom: 8px;
+      page-break-after: avoid;
+    }
+
+    h3 {
+      font-size: 12pt;
+      color: #4A4A4A;
+      margin-top: 12px;
+      margin-bottom: 6px;
+      page-break-after: avoid;
+    }
+
+    h4 {
+      font-size: 11pt;
+      color: #4A4A4A;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      page-break-after: avoid;
+    }
+
+    p {
+      margin-bottom: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+
+    th {
+      background-color: #e6f2e6;
+      color: #4A4A4A;
+      font-weight: bold;
+      text-align: left;
+      padding: 8px;
+      border: 1px solid #CCCCCC;
+    }
+
+    td {
+      padding: 8px;
+      border: 1px solid #CCCCCC;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .page-break {
+      page-break-before: always;
+      padding: 0.8cm;
+    }
+
+    .cover-page {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-left {
+      width: 60%;
+      height: 100%;
+      background-color: white;
+      padding: 50px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cover-right {
+      width: 40%;
+      height: 100%;
+      background-color: #e0e0e0;
+      padding: 50px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .logo {
+      width: 180px;
+      margin-bottom: 20px;
+    }
+
+    .green-banner {
+      position: absolute;
+      top: 28%;
+      left: 0;
+      width: 85%;
+      background-color: #4d9b58;
+      color: white;
+      font-family: Cambria, serif;
+      padding: 25px 0;
+      text-align: center;
+      z-index: 10;
+    }
+
+    .banner-title {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 0;
+      line-height: 1.3;
+      padding: 0 50px;
+    }
+
+    .building-image-container {
+      position: absolute;
+      top: 55%;
+      left: 50%;
+      transform: translate(-50%, -30%);
+      width: 60%;
+      z-index: 20;
+      background-color: white;
+      padding: 10px;
+      border: 1px solid #999;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .building-image {
+      width: 100%;
+      height: auto;
+      display: block;
+      border: none;
+    }
+
+    .address-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0 0 10px 0;
+      color: #000;
+    }
+
+    .address-text {
+      font-size: 12px;
+      margin: 0 0 20px 0;
+      color: #333;
+    }
+
+    .building-id {
+      font-size: 12px;
+      font-weight: bold;
+      margin: 0 0 10px 0;
+    }
+
+    .report-date {
+      font-size: 12px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .prepared-by {
+      margin-top: auto;
+    }
+
+    .prepared-by-title {
+      font-size: 12px;
+      font-weight: bold;
+      margin: 0 0 5px 0;
+    }
+
+    .company-name {
+      font-size: 11px;
+      font-weight: bold;
+      margin: 0 0 5px 0;
+    }
+
+    .company-info {
+      font-size: 11px;
+      margin: 0 0 5px 0;
+    }
+
+    .toc-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .toc-dots {
+      flex-grow: 1;
+      height: 1px;
+      position: relative;
+      margin: 0 5px;
+    }
+
+    .toc-dots::after {
+      content: "";
+      position: absolute;
+      bottom: 7px;
+      left: 0;
+      right: 0;
+      height: 1px;
+      border-bottom: 1px dotted #aaa;
+    }
+
+    /* Style for main section entry lines */
+    .toc-item:nth-child(1) .toc-dots::after,
+    .toc-item:nth-child(7) .toc-dots::after,
+    .toc-item:nth-child(18) .toc-dots::after,
+    .toc-item:nth-child(29) .toc-dots::after,
+    .toc-item:nth-child(40) .toc-dots::after {
+      border-bottom: 2px dotted #000;
+    }
+
+    /* Additional styling for different section types */
+    .toc-item:not(:nth-child(1)):not(:nth-child(7)):not(:nth-child(18)):not(:nth-child(29)):not(:nth-child(40)) .toc-dots::after {
+      bottom: 7px;
+    }
+
+    .superscript {
+      vertical-align: super;
+      font-size: smaller;
+    }
+
+    /* Table of Contents Styling */
+    .toc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 8px;
+    }
+
+    .toc-title h1 {
+      color: #00b050;
+      margin-top: 0;
+      font-size: 24pt;
+      margin-bottom: 5px;
+    }
+
+    /* Add the header line above the TOC */
+    .toc-header-line {
+      font-size: 9pt;
+      color: #666;
+      text-align: center;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+
+    .toc-logo {
+      margin-top: 10px;
+    }
+
+    .toc-logo img {
+      width: 140px;
+    }
+
+    .toc-content {
+      font-size: 10pt;
+      padding: 0 15px;
+      max-width: 95%;
+      margin: 0 auto;
+    }
+
+    /* Style the TOC items */
+    .toc-item {
+      display: flex;
+      align-items: baseline;
+      margin-bottom: 4px;
+      line-height: 1.5;
+      width: 100%;
+      white-space: nowrap;
+    }
+
+    /* Main section styling (I, II, III, IV, V) */
+    .toc-item:nth-child(1) .toc-section,
+    .toc-item:nth-child(7) .toc-section,
+    .toc-item:nth-child(18) .toc-section,
+    .toc-item:nth-child(29) .toc-section,
+    .toc-item:nth-child(40) .toc-section {
+      font-weight: bold;
+      color: #000;
+      font-style: italic;
+    }
+
+    .toc-item:nth-child(1) .toc-text,
+    .toc-item:nth-child(7) .toc-text,
+    .toc-item:nth-child(18) .toc-text,
+    .toc-item:nth-child(29) .toc-text,
+    .toc-item:nth-child(40) .toc-text {
+      font-weight: bold;
+      font-style: italic;
+      color: #000;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Main section dots styling */
+    .toc-item:nth-child(1) .toc-dots::after,
+    .toc-item:nth-child(7) .toc-dots::after,
+    .toc-item:nth-child(18) .toc-dots::after,
+    .toc-item:nth-child(29) .toc-dots::after,
+    .toc-item:nth-child(40) .toc-dots::after {
+      border-bottom: 2px dotted #000;
+      bottom: 7px;
+    }
+
+    .toc-item:nth-child(1),
+    .toc-item:nth-child(7),
+    .toc-item:nth-child(18),
+    .toc-item:nth-child(29),
+    .toc-item:nth-child(40) {
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+
+    /* Subsection styling (A, B, C, etc.) */
+    .toc-section {
+      width: 25px;
+      font-weight: normal;
+      color: #333;
+      padding-right: 2px;
+    }
+
+    .toc-text {
+      flex-shrink: 0;
+      color: #333;
+      margin-right: 4px;
+      padding-right: 3px;
+    }
+
+    .toc-page {
+      text-align: right;
+      width: 25px;
+      flex-shrink: 0;
+      padding-left: 2px;
+    }
+
+    /* Indent level for subsections */
+    .toc-item:not(:nth-child(1)):not(:nth-child(7)):not(:nth-child(18)):not(:nth-child(29)):not(:nth-child(40)) .toc-section {
+      margin-left: 10px;
+    }
+
+    /* Add spacing after the last subsection of each major section */
+    .toc-item:nth-child(6),
+    .toc-item:nth-child(17),
+    .toc-item:nth-child(28),
+    .toc-item:nth-child(39) {
+      margin-bottom: 12px;
+    }
+
+    /* Adjust space between TOC and Executive Summary */
+    #executive-summary {
+      margin-top: 0.5cm;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Cover Page -->
+  <div class="cover-page">
+    <div class="cover-left">
+      <img src="{{logoUrl}}" alt="Vert Energy Group Logo" class="logo">
+    </div>
+
+    <div class="cover-right">
+      <div>
+        <h1 class="address-title">{{streetName project.property_address}}</h1>
+        <p class="address-text">{{project.property_address}}</p>
+
+        <p class="building-id">Building ID: {{project.id}}</p>
+        <p class="report-date">April 17<span class="superscript">th</span>, 2025</p>
+      </div>
+
+      <div class="prepared-by">
+        <p class="prepared-by-title">Prepared by:</p>
+        <p class="company-name">Vert Energy Group, Inc.</p>
+        <p class="company-info">100 Spectrum Center Drive</p>
+        <p class="company-info">Irvine, California, 92618</p>
+        <p class="company-info">Phone: (800) 585-2680</p>
+        <p class="company-info">Email: info@vertenergygroup.com</p>
+      </div>
+    </div>
+
+    <div class="green-banner">
+      <p class="banner-title">ASHRAE Level II Energy Audit,</p>
+      <p class="banner-title">Water Audit</p>
+      <p class="banner-title">& Retro-commissioning Report</p>
+    </div>
+
+    <div class="building-image-container">
+      {{#if project.satellite_image_url}}
+      <img class="building-image" src="https://iili.io/3GLCNbj.png" alt="Building Image">
+      {{else}}
+      <img class="building-image" src="https://iili.io/3GLCNbj.png" alt="Building Image" style="max-height:300px;">
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Table of Contents -->
+  <div class="page-break">
+    <div class="toc-header">
+      <div class="toc-title">
+        <h1 id="table-of-contents">Table of Contents</h1>
+      </div>
+      <div class="toc-logo">
+        <img src="{{logoUrl}}" alt="Vert Energy Group Logo" style="width: 120px;">
+      </div>
+    </div>
+
+    <div class="toc-content">
+      <div class="toc-item">
+        <span class="toc-section">I.</span>
+        <span class="toc-text">Executive Summary</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">4</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">A.</span>
+        <span class="toc-text">Introduction</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">4</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">B.</span>
+        <span class="toc-text">Summary Tables</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">6</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">C.</span>
+        <span class="toc-text">EEMs, WEMs & RCMs Performance Analysis Summary</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">7</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">D.</span>
+        <span class="toc-text">EEM, WEM & RCM Financial Analysis Summary</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">9</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">E.</span>
+        <span class="toc-text">Next Steps</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">11</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">II.</span>
+        <span class="toc-text">ASHRAE Level II Energy Audit Report</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">12</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">A.</span>
+        <span class="toc-text">Introduction</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">12</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">B.</span>
+        <span class="toc-text">Energy Audit Procedures</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">12</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">C.</span>
+        <span class="toc-text">EEMs Cost Savings Summary Table</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">13</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">D.</span>
+        <span class="toc-text">Existing Conditions and Observations</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">14</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">E.</span>
+        <span class="toc-text">Energy Efficiency Measures Recommended</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">15</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">F.</span>
+        <span class="toc-text">EEMs Already Implemented</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">20</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">G.</span>
+        <span class="toc-text">EEMs to Consider</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">21</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">H.</span>
+        <span class="toc-text">EEMs Requiring Further Investigation</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">22</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">I.</span>
+        <span class="toc-text">Current ENERGY STAR® Benchmarking Test</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">23</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">J.</span>
+        <span class="toc-text">Energy Use Analysis</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">24</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">III.</span>
+        <span class="toc-text">Water Audit Report</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">31</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">A.</span>
+        <span class="toc-text">Introduction</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">31</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">B.</span>
+        <span class="toc-text">Water Audit Procedures</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">31</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">C.</span>
+        <span class="toc-text">WEMs Cost Savings Summary Table</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">33</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">D.</span>
+        <span class="toc-text">Existing Conditions and Observations</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">34</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">E.</span>
+        <span class="toc-text">Water Efficiency Measures Recommended</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">35</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">F.</span>
+        <span class="toc-text">WEMs Already Implemented</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">41</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">G.</span>
+        <span class="toc-text">WEMs to Consider</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">42</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">H.</span>
+        <span class="toc-text">WEMs Requiring Further Investigation</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">43</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">I.</span>
+        <span class="toc-text">Non-Efficiency Water Measure(s)</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">44</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">J.</span>
+        <span class="toc-text">Water Use Analysis</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">45</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">IV.</span>
+        <span class="toc-text">Retrocommissioning Report</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">49</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">A.</span>
+        <span class="toc-text">Introduction</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">49</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">B.</span>
+        <span class="toc-text">Objectives</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">49</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">C.</span>
+        <span class="toc-text">Overview of Results</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">49</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">D.</span>
+        <span class="toc-text">RCMs Cost Savings Summary Table</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">50</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">E.</span>
+        <span class="toc-text">Overview of Project Steps</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">51</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">F.</span>
+        <span class="toc-text">Retrocommissioning Plan</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">51</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">G.</span>
+        <span class="toc-text">Functional Performance Test Methodology</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">52</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">H.</span>
+        <span class="toc-text">Assessment Team</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">53</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">I.</span>
+        <span class="toc-text">Functional Performance Test Findings & Recommendations</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">53</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">J.</span>
+        <span class="toc-text">Operational Training</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">56</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">V.</span>
+        <span class="toc-text">Appendices</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">57</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">A.</span>
+        <span class="toc-text">Assumptions</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">58</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">B.</span>
+        <span class="toc-text">Equations</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">59</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">C.</span>
+        <span class="toc-text">Supporting Documents</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">60</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">D.</span>
+        <span class="toc-text">Equivalent Full Load Hours (EFLH)</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">62</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">E.</span>
+        <span class="toc-text">Additional O&M</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">63</span>
+      </div>
+
+      <div class="toc-item">
+        <span class="toc-section">F.</span>
+        <span class="toc-text">LADWP Rebates</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">64</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Executive Summary -->
+  <div class="page-break">
+    <h1 id="executive-summary">I. Executive Summary</h1>
+
+    {{> executive-summary}}
+  </div>
+
+  <!-- ASHRAE Level II Energy Audit Report -->
+  <div class="page-break">
+    <h1 id="energy-audit">II. ASHRAE Level II Energy Audit Report</h1>
+
+    {{> energy-audit}}
+  </div>
+
+  <!-- Water Audit Report -->
+  <div class="page-break">
+    <h1 id="water-audit">III. Water Audit Report</h1>
+
+    {{> water-audit}}
+  </div>
+
+  <!-- Retro-commissioning Report -->
+  <div class="page-break">
+    <h1 id="retro-commissioning">IV. Retro-commissioning Report</h1>
+
+    {{> retro-commissioning}}
+  </div>
+
+  <!-- Appendices -->
+  <div class="page-break">
+    <h1 id="appendices">V. Appendices</h1>
+
+    {{> appendices}}
+  </div>
+</body>
+
+</html>

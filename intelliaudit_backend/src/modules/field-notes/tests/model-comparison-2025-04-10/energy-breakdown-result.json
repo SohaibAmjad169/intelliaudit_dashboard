@@ -1,0 +1,173 @@
+{
+  "endUseComponents": [
+    {
+      "name": "Air Compressors",
+      "electricPercent": 0,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 0,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Cooking",
+      "electricPercent": 4,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 5181,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Cooling",
+      "electricPercent": 21,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 27199,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Heating",
+      "electricPercent": 2,
+      "gasPercent": 37,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 2590,
+      "gasTherms": 204,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Lighting",
+      "electricPercent": 0,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 0,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Other",
+      "electricPercent": 0,
+      "gasPercent": 5,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 0,
+      "gasTherms": 28,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Office Equipment",
+      "electricPercent": 0,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 0,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Process",
+      "electricPercent": 0,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 0,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Pool/Spa",
+      "electricPercent": 3,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 3886,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Motors/Pumps",
+      "electricPercent": 0,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 0,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Elevator",
+      "electricPercent": 0,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 0,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Refrigeration",
+      "electricPercent": 70,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 90662,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Ventilation",
+      "electricPercent": 0,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 0,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Water Heating",
+      "electricPercent": 0,
+      "gasPercent": 58,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 0,
+      "gasTherms": 320,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    },
+    {
+      "name": "Laundry",
+      "electricPercent": 0,
+      "gasPercent": 0,
+      "steamPercent": 0,
+      "otherPercent": 0,
+      "electricKwh": 0,
+      "gasTherms": 0,
+      "steamMMBtu": 0,
+      "otherMMBtu": 0
+    }
+  ],
+  "totalActualElectric": 129517,
+  "totalActualGas": 552,
+  "totalActualSteam": 0,
+  "totalActualOther": 0
+}

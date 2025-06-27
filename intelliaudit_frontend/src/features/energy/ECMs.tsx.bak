@@ -1,0 +1,2020 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Lightbulb, Loader2, AlertCircle, Calculator, Download, PieChart, BarChart, ChevronDown, ChevronRight, Info, Tag } from 'lucide-react';
+import { GlowBox } from '@/components/ui/glow-components';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { apiClient } from '@/services/common/api-client';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Chart } from 'chart.js/auto';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { fetchTotalUtilityCost, fetchTotalUtilityUsage } from '@/services/energy-analysis';
+
+// Add import for EndUseBreakdownChart
+import { EndUseBreakdownChart } from './EndUseBreakdownChart';
+import { BaselineEndUseComparison } from './BaselineEndUseComparison';
+
+interface ECMsProps {
+  projectId: string;
+}
+
+interface EquipmentItem {
+  id: string;
+  name?: string;
+  equipment_type?: string;
+  category?: string;
+  quantity?: number;
+  wattage?: number;
+  operating_hours?: number;
+  days_per_week?: number;
+  load_factor?: string;
+  annual_kwh?: number;
+  energy_cost?: number;
+  manufacturer?: string;
+  model?: string;
+  photo_url?: string;
+  photos?: { url: string }[];
+  serial_number?: string;
+  specifications?: any;
+  condition?: {
+    overall: string;
+    estimatedAge?: number;
+  };
+  notes?: string;
+}
+
+// Add this interface for potential savings
+interface PotentialSaving {
+  category: string;
+  current_kwh: number;
+  potential_kwh: number;
+  savings_kwh: number;
+  current_cost: number;
+  potential_cost: number;
+  savings_amount: number;
+  savings_percentage: number;
+}
+
+// Update the EndUseBreakdown interface to include potential_savings
+interface EndUseBreakdown {
+  total_annual_kwh: number;
+  total_annual_cost: number;
+  by_category: Record<string, {
+    annual_kwh: number;
+    annual_cost: number;
+    percentage: number;
+  }>;
+  by_equipment_type: Record<string, {
+    annual_kwh: number;
+    annual_cost: number;
+    percentage: number;
+  }>;
+  equipment_details: EquipmentItem[];
+  potential_savings?: PotentialSaving[];
+  end_use_breakdown?: {
+    by_category: Record<string, {
+      annual_kwh: number;
+      annual_cost: number;
+      percentage: number;
+    }>;
+  };
+}
+
+// Update the ChartEndUseBreakdown interface
+interface ChartEndUseBreakdown {
+  end_use_breakdown: Record<string, number>;
+  original_default_breakdown?: Record<string, number>;
+}
+
+// Custom chart component for this specific use case
+const EnergyBreakdownChart: React.FC<{
+  categoryData: Record<string, { annual_kwh: number; annual_cost: number; percentage: number; }>;
+  height?: number;
+  width?: number;
+}> = ({ categoryData, height = 350, width = 400 }) => {
+  const chartRef = useRef<HTMLCanvasElement>(null);
+  const chartInstance = useRef<Chart | null>(null);
+  const [chartType, setChartType] = useState<'pie' | 'bar'>('pie');
+  
+  // Colors for different categories
+  const colors = [
+    '#4cd964', // Green
+    '#5ac8fa', // Light Blue
+    '#007aff', // Blue
+    '#ff2d55', // Red
+    '#ff9500', // Orange
+    '#ffcc00', // Yellow
+    '#8e8e93', // Gray
+    '#34aadc', // Teal
+    '#5856d6', // Purple
+    '#af52de', // Pink
+  ];
+  
+  useEffect(() => {
+    if (!chartRef.current || !categoryData) return;
+    
+    // Filter and sort the data
+    const sortedData = Object.entries(categoryData)
+      .filter(([_, data]) => data.percentage > 0)
+      .sort(([_, dataA], [__, dataB]) => dataB.percentage - dataA.percentage);
+    
+    const labels = sortedData.map(([category]) => category);
+    const values = sortedData.map(([_, data]) => data.percentage);
+    const backgroundColors = sortedData.map((_entry, index) => colors[index % colors.length]);
+    
+    // Destroy previous chart if it exists
+    if (chartInstance.current) {
+      chartInstance.current.destroy();
+    }
+    
+    // Create new chart
+    const ctx = chartRef.current.getContext('2d');
+    if (!ctx) return;
+    
+    chartInstance.current = new Chart(ctx, {
+      type: chartType,
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: backgroundColors,
+          borderWidth: 1,
+          borderColor: '#ffffff',
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+              font: { size: 11 },
+              padding: 10,
+              boxWidth: 12
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const value = context.raw as number;
+                return `${value.toFixed(1)}%`;
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    return () => {
+      if (chartInstance.current) {
+        chartInstance.current.destroy();
+      }
+    };
+  }, [categoryData, chartType]);
+  
+  return (
+    <div className="relative h-full w-full">
+      <canvas ref={chartRef} height={height} width={width} />
+      <div className="absolute top-2 right-2 flex items-center space-x-2 p-1">
+        <button 
+          onClick={() => chartType !== 'pie' && setChartType('pie')}
+          className={`text-xs p-1 rounded-full ${chartType === 'pie' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'}`}
+          aria-label="Pie chart"
+        >
+          <PieChart size={14} />
+        </button>
+        <button 
+          onClick={() => chartType !== 'bar' && setChartType('bar')}
+          className={`text-xs p-1 rounded-full ${chartType === 'bar' ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'}`}
+          aria-label="Bar chart"
+        >
+          <BarChart size={14} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// For the Equipment Details tab, update to include grouping by category:
+function EquipmentTable({ equipment }: { equipment: EquipmentItem[] }) {
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [allExpanded, setAllExpanded] = useState(true);
+  
+  // Group equipment by category
+  const equipmentByCategory = useMemo(() => {
+    const grouped: Record<string, EquipmentItem[]> = {};
+    
+    // First, sort by highest energy usage
+    const sortedEquipment = [...equipment].sort((a, b) => 
+      (b.annual_kwh || 0) - (a.annual_kwh || 0)
+    );
+    
+    // Then group by category
+    sortedEquipment.forEach(item => {
+      const category = item.category || 'Uncategorized';
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+      grouped[category].push(item);
+    });
+    
+    return grouped;
+  }, [equipment]);
+  
+  // Initialize categories as expanded by default except for Uncategorized
+  useEffect(() => {
+    const initialExpandedState: Record<string, boolean> = {};
+    Object.keys(equipmentByCategory).forEach(category => {
+      initialExpandedState[category] = category !== 'Uncategorized';
+    });
+    setExpandedCategories(initialExpandedState);
+  }, [equipmentByCategory]);
+  
+  const toggleRow = (id: string) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+  
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
+  const toggleAllCategories = () => {
+    const newState = !allExpanded;
+    setAllExpanded(newState);
+    
+    const updatedCategories: Record<string, boolean> = {};
+    Object.keys(equipmentByCategory).forEach(category => {
+      updatedCategories[category] = newState;
+    });
+    setExpandedCategories(updatedCategories);
+  };
+  
+  const formatSpecifications = (specs: any) => {
+    if (!specs) return "None";
+    
+    if (typeof specs === 'string') {
+      try {
+        specs = JSON.parse(specs);
+      } catch (e) {
+        return specs;
+      }
+    }
+    
+    return Object.entries(specs)
+      .filter(([_, value]) => value !== null && value !== undefined && value !== '')
+      .map(([key, value]) => {
+        const formattedKey = key.replace(/([A-Z])/g, ' $1')
+          .replace(/^./, str => str.toUpperCase());
+        return `${formattedKey}: ${value}`;
+      }).join(', ');
+  };
+  
+  // Calculate category totals and percentages
+  const categoryStats = useMemo(() => {
+    const totals: Record<string, { 
+      annual_kwh: number, 
+      energy_cost: number, 
+      percentage: number,
+      itemCount: number
+    }> = {};
+    
+    // Calculate total energy usage across all equipment
+    const totalKwh = equipment.reduce((sum, item) => sum + (item.annual_kwh || 0), 0);
+    
+    Object.entries(equipmentByCategory).forEach(([category, items]) => {
+      const categoryKwh = items.reduce((acc, item) => acc + (item.annual_kwh || 0), 0);
+      const categoryCost = items.reduce((acc, item) => acc + (item.energy_cost || 0), 0);
+      
+      totals[category] = {
+        annual_kwh: categoryKwh,
+        energy_cost: categoryCost,
+        percentage: totalKwh > 0 ? (categoryKwh / totalKwh) * 100 : 0,
+        itemCount: items.length
+      };
+    });
+    
+    return totals;
+  }, [equipmentByCategory, equipment]);
+  
+  // Sort the categories to put Uncategorized at the bottom
+  const sortedCategories = useMemo(() => {
+    return Object.keys(equipmentByCategory).sort((a, b) => {
+      // Always put "Uncategorized" at the end
+      if (a === 'Uncategorized') return 1;
+      if (b === 'Uncategorized') return -1;
+      
+      // Otherwise sort by energy usage (highest first)
+      return categoryStats[b].annual_kwh - categoryStats[a].annual_kwh;
+    });
+  }, [equipmentByCategory, categoryStats]);
+  
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-end mb-2">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={toggleAllCategories}
+          className="text-xs"
+        >
+          {allExpanded ? 'Collapse All' : 'Expand All'}
+        </Button>
+      </div>
+      
+      {sortedCategories.map(category => {
+        const items = equipmentByCategory[category];
+        return (
+          <div key={category} className="border rounded-md overflow-hidden">
+            <div 
+              className="flex items-center justify-between p-3 bg-muted/30 cursor-pointer hover:bg-muted/50"
+              onClick={() => toggleCategory(category)}
+            >
+              <div className="flex items-center space-x-2">
+                {expandedCategories[category] ? 
+                  <ChevronDown className="h-5 w-5 text-muted-foreground" /> : 
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                }
+                <h3 className="font-medium">
+                  <Badge variant="outline" className={
+                    category.toLowerCase().includes('hvac') ? 'bg-blue-100 text-blue-800' :
+                    category.toLowerCase().includes('light') ? 'bg-yellow-100 text-yellow-800' :
+                    category.toLowerCase().includes('appliance') ? 'bg-green-100 text-green-800' :
+                    'bg-gray-100 text-gray-800'
+                  }>
+                    {category}
+                  </Badge>
+                </h3>
+                <span className="text-sm text-muted-foreground">({items.length} items)</span>
+              </div>
+              <div className="text-sm">
+                <span className="mr-4">{categoryStats[category].annual_kwh.toLocaleString()} kWh</span>
+                <span>${categoryStats[category].energy_cost.toLocaleString()}</span>
+                <span className="ml-2 text-xs text-muted-foreground">
+                  ({categoryStats[category].percentage.toFixed(1)}%)
+                </span>
+              </div>
+            </div>
+            
+            {expandedCategories[category] && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead></TableHead>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead className="text-right">Wattage</TableHead>
+                    <TableHead className="text-right">Qty</TableHead>
+                    <TableHead className="text-right">Hours</TableHead>
+                    <TableHead className="text-right">Days</TableHead>
+                    <TableHead className="text-right">Load Factor</TableHead>
+                    <TableHead className="text-right">Annual kWh</TableHead>
+                    <TableHead className="text-right">Annual Cost</TableHead>
+                    <TableHead>Photo</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {items.map(item => (
+                    <React.Fragment key={item.id}>
+                      <TableRow 
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => toggleRow(item.id)}
+                      >
+                        <TableCell>
+                          {expandedRows[item.id] ? 
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" /> : 
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          }
+                        </TableCell>
+                        <TableCell className="font-mono text-xs">{item.id?.substring(0, 8) || 'N/A'}</TableCell>
+                        <TableCell>
+                          {item.name || 
+                           (item.manufacturer && item.model ? `${item.manufacturer} ${item.model}` : 
+                            (item.equipment_type ? `${item.equipment_type}` : 
+                             (item.category ? `${item.category} Equipment` : 'Unidentified')))}
+                        </TableCell>
+                        <TableCell>{item.equipment_type || 'Unknown'}</TableCell>
+                        <TableCell className="text-right">{(item.wattage || 0).toLocaleString()}</TableCell>
+                        <TableCell className="text-right">{item.quantity || 1}</TableCell>
+                        <TableCell className="text-right">{item.operating_hours || 0}</TableCell>
+                        <TableCell className="text-right">{item.days_per_week || 0}</TableCell>
+                        <TableCell className="text-right">{item.load_factor || '0'}</TableCell>
+                        <TableCell className="text-right">{(item.annual_kwh || 0).toLocaleString()}</TableCell>
+                        <TableCell className="text-right">${(item.energy_cost || 0).toLocaleString()}</TableCell>
+                        <TableCell>
+                          {item.photo_url || (item.photos && item.photos.length > 0) ? (
+                            <div className="relative w-10 h-10 rounded overflow-hidden border border-muted">
+                              <img 
+                                src={item.photo_url || (item.photos && item.photos[0]?.url)} 
+                                alt={item.name || item.equipment_type || "Equipment"} 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  // Handle broken image URLs by showing a placeholder
+                                  e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'%3E%3C/rect%3E%3Ccircle cx='9' cy='9' r='2'%3E%3C/circle%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21'%3E%3C/path%3E%3C/svg%3E";
+                                }}
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-xs">No image</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                      
+                      {/* Expanded detail row */}
+                      {expandedRows[item.id] && (
+                        <TableRow className="bg-muted/20">
+                          <TableCell colSpan={12} className="p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              {/* Equipment Details */}
+                              <div>
+                                <h4 className="text-sm font-medium mb-2 flex items-center">
+                                  <Info className="h-4 w-4 mr-1" /> Equipment Details
+                                </h4>
+                                <dl className="grid grid-cols-1 gap-1 text-sm">
+                                  {item.manufacturer && (
+                                    <>
+                                      <dt className="text-muted-foreground">Manufacturer:</dt>
+                                      <dd>{item.manufacturer}</dd>
+                                    </>
+                                  )}
+                                  {item.model && (
+                                    <>
+                                      <dt className="text-muted-foreground">Model:</dt>
+                                      <dd>{item.model}</dd>
+                                    </>
+                                  )}
+                                  {item.serial_number && (
+                                    <>
+                                      <dt className="text-muted-foreground">Serial Number:</dt>
+                                      <dd>{item.serial_number}</dd>
+                                    </>
+                                  )}
+                                  <dt className="text-muted-foreground">Energy Calculation:</dt>
+                                  <dd className="font-mono text-xs">
+                                    {item.wattage || 0} watts × {item.quantity || 1} units × {item.operating_hours || 0} hrs × {item.days_per_week || 0} days × 52 weeks × {item.load_factor || 0} ÷ 1000 = {(item.annual_kwh || 0).toLocaleString()} kWh
+                                  </dd>
+                                </dl>
+                              </div>
+                              
+                              {/* Specifications */}
+                              <div>
+                                <h4 className="text-sm font-medium mb-2 flex items-center">
+                                  <Tag className="h-4 w-4 mr-1" /> Specifications
+                                </h4>
+                                <p className="text-sm">
+                                  {item.specifications ? 
+                                    formatSpecifications(item.specifications) : 
+                                    <span className="text-muted-foreground italic">No specifications available</span>
+                                  }
+                                </p>
+                              </div>
+                              
+                              {/* Condition & Notes */}
+                              <div>
+                                <h4 className="text-sm font-medium mb-2 flex items-center">
+                                  <Lightbulb className="h-4 w-4 mr-1" /> Condition & Notes
+                                </h4>
+                                <dl className="grid grid-cols-1 gap-1 text-sm">
+                                  {item.condition && (
+                                    <>
+                                      <dt className="text-muted-foreground">Condition:</dt>
+                                      <dd>
+                                        <Badge variant={
+                                          item.condition.overall === 'Good' ? 'default' :
+                                          item.condition.overall === 'Fair' ? 'secondary' :
+                                          'destructive'
+                                        }>
+                                          {item.condition.overall || 'Unknown'}
+                                        </Badge>
+                                        {item.condition.estimatedAge && 
+                                          <span className="ml-2 text-xs text-muted-foreground">
+                                            Est. Age: {item.condition.estimatedAge}
+                                          </span>
+                                        }
+                                      </dd>
+                                    </>
+                                  )}
+                                  {item.notes && (
+                                    <>
+                                      <dt className="text-muted-foreground">Notes:</dt>
+                                      <dd className="italic">{item.notes}</dd>
+                                    </>
+                                  )}
+                                </dl>
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Utility functions for formatting and color selection
+const formatKwh = (kwh: number): string => {
+  if (kwh >= 1000) {
+    return `${(kwh / 1000).toFixed(1)}k kWh`;
+  }
+  return `${Math.round(kwh)} kWh`;
+};
+
+const getCategoryColor = (category: string): string => {
+  const colorMap: Record<string, string> = {
+    'HVAC': 'blue-500',
+    'Lighting': 'yellow-500',
+    'Appliances': 'green-500',
+    'Office Equipment': 'orange-500',
+    'Kitchen': 'red-500',
+    'Other': 'purple-500'
+  };
+  
+  return colorMap[category] || 'gray-500';
+};
+
+/**
+ * Energy Conservation Measures (ECMs) Component
+ * 
+ * This component will show specific energy conservation measures
+ * identified for a project.
+ */
+export const ECMs: React.FC<ECMsProps> = ({ projectId }) => {
+  const { toast } = useToast();
+  const [energyData, setEnergyData] = useState<EndUseBreakdown | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  
+  // Add new state for actual utility data
+  const [actualTotalCost, setActualTotalCost] = useState<number>(0);
+  const [actualElectricCost, setActualElectricCost] = useState<number>(0);
+  const [actualNaturalGasCost, setActualNaturalGasCost] = useState<number>(0);
+  const [actualTotalUsage, setActualTotalUsage] = useState<number>(0);
+  const [actualElectricUsage, setActualElectricUsage] = useState<number>(0);
+  const [actualNaturalGasUsage, setActualNaturalGasUsage] = useState<number>(0);
+  const [isLoadingUtilityData, setIsLoadingUtilityData] = useState(true);
+  
+  // Add state for comprehensive ECO recommendations
+  const [comprehensiveRecommendations, setComprehensiveRecommendations] = useState<any[]>([]);
+  const [isLoadingComprehensiveData, setIsLoadingComprehensiveData] = useState(true);
+
+  const fetchEnergyData = async () => {
+    if (!projectId) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // Call the API endpoint to get energy analysis data from the database
+      const data = await apiClient.get<EndUseBreakdown>(`end-use-analysis/projects/${projectId}/energy-analysis`);
+      
+      if (data) {
+        setEnergyData(data);
+      } else {
+        // If no data found, prompt the user to generate it
+        setError('No energy analysis data found. Please generate it first.');
+      }
+    } catch (err) {
+      console.error('Error fetching energy data:', err);
+      setError('Failed to load energy analysis data. Please try generating it first.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const generateEnergyAnalysis = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    interface CalculationResponse {
+      success: boolean;
+      message: string;
+      details?: string;
+      error?: string;
+    }
+    
+    try {
+      // Call the backend endpoint to trigger the energy analysis calculation
+      const response = await apiClient.post<CalculationResponse>(`end-use-analysis/projects/${projectId}/calculate-energy`);
+      
+      if (response && response.success) {
+        toast({
+          title: "Energy analysis complete",
+          description: "Energy calculations have been generated successfully",
+          duration: 3000
+        });
+        
+        // Fetch the newly generated data
+        await fetchEnergyData();
+      } else {
+        throw new Error((response as any).message || 'Unknown error');
+      }
+    } catch (err) {
+      console.error('Error generating energy analysis:', err);
+      setError('Failed to generate energy analysis. Please try again later.');
+      setIsLoading(false);
+    }
+  };
+  
+  // Add new function to fetch utility data
+  const fetchUtilityData = async () => {
+    if (!projectId) return;
+    
+    try {
+      setIsLoadingUtilityData(true);
+      const [costData, usageData] = await Promise.all([
+        fetchTotalUtilityCost(projectId),
+        fetchTotalUtilityUsage(projectId)
+      ]);
+      
+      // Save total and breakdown costs
+      setActualTotalCost(costData.totalCost);
+      setActualElectricCost(costData.electricCost);
+      setActualNaturalGasCost(costData.naturalGasCost);
+      
+      // Save total and breakdown usage
+      setActualTotalUsage(usageData.totalEnergyUsage);
+      setActualElectricUsage(usageData.totalElectric);
+      setActualNaturalGasUsage(usageData.naturalGasInKWh);
+    } catch (error) {
+      console.error('Failed to load utility data:', error);
+    } finally {
+      setIsLoadingUtilityData(false);
+    }
+  };
+
+  // Fetch comprehensive recommendations from ECO analysis
+  const fetchComprehensiveRecommendations = async () => {
+    if (!projectId) return;
+    
+    setIsLoadingComprehensiveData(true);
+    
+    try {
+      // Fetch the project data which contains the ECO analysis
+      const response = await axios.get(`${API_BASE_URL}/api/projects/${projectId}`);
+      
+      if (response.data && response.data.ec_o) {
+        try {
+          const parsedData = JSON.parse(response.data.ec_o);
+          if (parsedData.recommendations && Array.isArray(parsedData.recommendations)) {
+            // Format the recommendations to match our ECM format
+            const formattedRecommendations = parsedData.recommendations.map((rec: any) => ({
+              id: `ECO-${Math.random().toString(36).substring(2, 7)}`,
+              title: rec.title,
+              category: 'Preliminary',
+              existingCondition: rec.description.split('.')[0] + '.',
+              recommendation: rec.description,
+              benefits: [],
+              annualSavings: {
+                energy: 0,
+                cost: parseFloat(rec.estimatedSavings.replace(/[^0-9.-]+/g, '')) || 0,
+                percentage: 0
+              },
+              implementationCost: {
+                min: parseFloat(rec.implementationCost.replace(/[^0-9.-]+/g, '')) || 0,
+                max: parseFloat(rec.implementationCost.replace(/[^0-9.-]+/g, '')) * 1.2 || 0
+              },
+              paybackPeriod: {
+                min: parseFloat(rec.paybackPeriod.replace(/[^0-9.-]+/g, '')) || 0,
+                max: parseFloat(rec.paybackPeriod.replace(/[^0-9.-]+/g, '')) * 1.2 || 0
+              },
+              applicableEquipment: [],
+              priority: rec.priority || 'medium'
+            }));
+            
+            setComprehensiveRecommendations(formattedRecommendations);
+            
+            toast({
+              title: "Preliminary recommendations loaded",
+              description: `${formattedRecommendations.length} recommendations from field notes and photo analysis loaded`,
+              duration: 3000
+            });
+          }
+        } catch (parseError) {
+          console.error('Error parsing ECO data:', parseError);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching comprehensive recommendations:', err);
+    } finally {
+      setIsLoadingComprehensiveData(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEnergyData();
+    fetchUtilityData(); // Fetch utility data when component mounts
+    fetchComprehensiveRecommendations(); // Fetch preliminary ECMs from ECO
+  }, [projectId]);
+  
+  const downloadAnalysisReport = () => {
+    if (!energyData) return;
+    
+    let csvContent = "data:text/csv;charset=utf-8,";
+    
+    // Add report header with summary
+    csvContent += "Energy Analysis Report\n";
+    csvContent += `Project ID,${projectId}\n`;
+    csvContent += `Total Annual kWh,${energyData.total_annual_kwh.toLocaleString()}\n`;
+    csvContent += `Total Annual Cost,$${energyData.total_annual_cost.toLocaleString()}\n\n`;
+    
+    // Add end-use breakdown
+    csvContent += "End-Use Breakdown\n";
+    csvContent += "Category,Annual kWh,Annual Cost,Percentage\n";
+    
+    // Use by_category data (which we know exists) or end_use_breakdown if it exists
+    const categoryData = energyData.end_use_breakdown?.by_category || energyData.by_category;
+    
+    if (categoryData) {
+      Object.entries(categoryData).forEach(([category, data]) => {
+        csvContent += `${category},${data.annual_kwh.toLocaleString()},$${data.annual_cost.toLocaleString()},${(data.percentage * 100).toFixed(1)}%\n`;
+      });
+    }
+    
+    csvContent += "\n";
+    
+    // Add equipment details with more fields
+    csvContent += "Equipment Details\n";
+    csvContent += "ID,Name,Type,Category,Wattage (W),Quantity,Hours/Day,Days/Week,Load Factor,Annual kWh,Annual Cost,Manufacturer,Model,Serial Number,Condition,Est. Age,Notes,Photo URL\n";
+    
+    energyData.equipment_details.forEach(item => {
+      // Get the best name using our fallback logic
+      const displayName = item.name || 
+        (item.manufacturer && item.model ? `${item.manufacturer} ${item.model}` : 
+          (item.equipment_type ? `${item.equipment_type}` : 
+            (item.category ? `${item.category} Equipment` : 'Unidentified')));
+      
+      // Get condition details if available
+      const condition = item.condition ? item.condition.overall : '';
+      const estimatedAge = item.condition && item.condition.estimatedAge ? item.condition.estimatedAge : '';
+      
+      // Format specs for CSV if needed
+      const formattedSpecs = item.specifications ? 
+        (typeof item.specifications === 'string' ? 
+          item.specifications.replace(/,/g, ';') : 
+          JSON.stringify(item.specifications).replace(/,/g, ';')) : 
+        '';
+      
+      // Build the CSV line with proper escaping
+      csvContent += `${item.id?.substring(0, 8) || 'N/A'},`;
+      csvContent += `"${displayName.replace(/"/g, '""')}",`;
+      csvContent += `"${(item.equipment_type || 'Unknown').replace(/"/g, '""')}",`;
+      csvContent += `"${(item.category || 'Uncategorized').replace(/"/g, '""')}",`;
+      csvContent += `${item.wattage || 0},`;
+      csvContent += `${item.quantity || 1},`;
+      csvContent += `${item.operating_hours || 0},`;
+      csvContent += `${item.days_per_week || 0},`;
+      csvContent += `${item.load_factor || '0'},`;
+      csvContent += `${item.annual_kwh || 0},`;
+      csvContent += `${item.energy_cost || 0},`;
+      csvContent += `"${(item.manufacturer || '').replace(/"/g, '""')}",`;
+      csvContent += `"${(item.model || '').replace(/"/g, '""')}",`;
+      csvContent += `"${(item.serial_number || '').replace(/"/g, '""')}",`;
+      csvContent += `"${condition.replace(/"/g, '""')}",`;
+      csvContent += `${estimatedAge},`;
+      csvContent += `"${(item.notes || '').replace(/"/g, '""')}",`;
+      csvContent += `${item.photo_url || (item.photos && item.photos.length > 0 ? item.photos[0]?.url : '')}\n`;
+    });
+    
+    csvContent += "\n";
+    
+    // Add potential savings if available
+    if (energyData.potential_savings && energyData.potential_savings.length > 0) {
+      csvContent += "Potential Energy Savings\n";
+      csvContent += "Category,Current kWh,Potential kWh,Savings kWh,Current Cost,Potential Cost,Savings Amount,Savings Percentage\n";
+      
+      energyData.potential_savings.forEach((item) => {
+        csvContent += `${item.category},`;
+        csvContent += `${item.current_kwh.toLocaleString()},`;
+        csvContent += `${item.potential_kwh.toLocaleString()},`;
+        csvContent += `${item.savings_kwh.toLocaleString()},`;
+        csvContent += `$${item.current_cost.toLocaleString()},`;
+        csvContent += `$${item.potential_cost.toLocaleString()},`;
+        csvContent += `$${item.savings_amount.toLocaleString()},`;
+        csvContent += `${item.savings_percentage.toFixed(1)}%\n`;
+      });
+    }
+    
+    // Create download link
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `energy-analysis-report-${projectId}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Report downloaded",
+      description: "Comprehensive energy analysis report has been downloaded as CSV",
+      duration: 3000
+    });
+  };
+
+  // Replace formatChartData with a more complete version that includes original_default_breakdown
+  const formatChartData = (data: EndUseBreakdown | null): ChartEndUseBreakdown | null => {
+    if (!data) return null;
+    
+    // Create a properly formatted end use breakdown for the chart
+    const end_use_breakdown: Record<string, number> = {};
+    const original_default_breakdown: Record<string, number> = {
+      'HVAC': 42.5,
+      'Lighting': 22.5, 
+      'Appliances': 17.5,
+      'Other': 17.5
+    };
+    
+    // Add entries from by_category
+    Object.entries(data.by_category).forEach(([category, info]) => {
+      end_use_breakdown[category] = info.percentage; 
+    });
+    
+    return {
+      end_use_breakdown,
+      original_default_breakdown
+    };
+  };
+
+  // First, create ECM types and interfaces to structure our recommendations
+  interface ECMRecommendation {
+    id: string;
+    title: string;
+    category: 'EEM' | 'WEM' | 'RCM'; // Energy, Water, or Retro-Commissioning Measure
+    existingCondition: string;
+    recommendation: string;
+    benefits: string[];
+    annualSavings: {
+      energy: number; // kWh
+      cost: number; // $
+      percentage: number; // % of category usage
+    };
+    implementationCost: {
+      min: number;
+      max: number;
+    };
+    paybackPeriod: {
+      min: number;
+      max: number;
+    };
+    applicableEquipment: string[];
+    priority: 'High' | 'Medium' | 'Low';
+    notes?: string;
+  }
+
+  // Add new utility function to generate ECMs based on equipment data
+  const generateECMRecommendations = (data: EquipmentItem[]): ECMRecommendation[] => {
+    const recommendations: ECMRecommendation[] = [];
+    
+    // Group equipment by category for easier analysis
+    const equipmentByCategory = data.reduce((acc, item) => {
+      const category = item.category || 'Uncategorized';
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(item);
+      return acc;
+    }, {} as Record<string, EquipmentItem[]>);
+    
+    // Group equipment by type
+    const equipmentByType = data.reduce((acc, item) => {
+      const type = item.equipment_type || 'Unknown';
+      if (!acc[type]) acc[type] = [];
+      acc[type].push(item);
+      return acc;
+    }, {} as Record<string, EquipmentItem[]>);
+    
+    // LED Lighting Upgrade ECM
+    if (equipmentByCategory['Lighting'] && equipmentByCategory['Lighting'].length > 0) {
+      const lightingEquipment = equipmentByCategory['Lighting'];
+      const nonLedLighting = lightingEquipment.filter(item => 
+        !item.equipment_type?.toLowerCase().includes('led') && 
+        !item.name?.toLowerCase().includes('led')
+      );
+      
+      if (nonLedLighting.length > 0) {
+        const totalLightingEnergy = lightingEquipment.reduce((sum, item) => sum + (item.annual_kwh || 0), 0);
+        const nonLedEnergy = nonLedLighting.reduce((sum, item) => sum + (item.annual_kwh || 0), 0);
+        const potentialSavings = nonLedEnergy * 0.6; // Assume 60% energy savings from LED retrofit
+        
+        recommendations.push({
+          id: 'EEM-LED-01',
+          title: 'LED Lighting Upgrades',
+          category: 'EEM',
+          existingCondition: `Your facility has ${nonLedLighting.length} non-LED lighting fixtures that consume approximately ${Math.round(nonLedEnergy).toLocaleString()} kWh annually.`,
+          recommendation: 'Replace existing non-LED lighting with high-efficiency LED fixtures to reduce energy consumption and maintenance costs.',
+          benefits: [
+            'Energy Savings: LEDs use 60-75% less electricity than traditional lighting',
+            'Extended Lifespan: 25,000-50,000 hours versus 1,000-8,000 hours for conventional lighting',
+            'Reduced Maintenance: Less frequent replacements needed',
+            'Improved Light Quality: Better color rendering and visibility',
+            'Instant Start: No warm-up period required',
+            'Reduced Cooling Costs: LEDs emit less heat'
+          ],
+          annualSavings: {
+            energy: potentialSavings,
+            cost: potentialSavings * 0.12, // Assuming $0.12/kWh
+            percentage: nonLedEnergy > 0 ? Math.round((potentialSavings / nonLedEnergy) * 100) : 0
+          },
+          implementationCost: {
+            min: nonLedLighting.length * 60,
+            max: nonLedLighting.length * 120
+          },
+          paybackPeriod: {
+            min: (nonLedLighting.length * 60) / (potentialSavings * 0.12),
+            max: (nonLedLighting.length * 120) / (potentialSavings * 0.12)
+          },
+          applicableEquipment: nonLedLighting.map(item => item.name || item.equipment_type || 'Unknown lighting fixture'),
+          priority: potentialSavings > 1000 ? 'High' : 'Medium'
+        });
+      }
+    }
+    
+    // HVAC Maintenance and Optimization
+    if (equipmentByCategory['HVAC'] && equipmentByCategory['HVAC'].length > 0) {
+      const hvacEquipment = equipmentByCategory['HVAC'];
+      const totalHvacEnergy = hvacEquipment.reduce((sum, item) => sum + (item.annual_kwh || 0), 0);
+      
+      // Check for old equipment that might need maintenance or replacement
+      const agingHvac = hvacEquipment.filter(item => {
+        // Fixed: Parse as number only if it's a string, otherwise use the number directly
+        const age = item.condition?.estimatedAge ? 
+          (typeof item.condition.estimatedAge === 'string' ? 
+            parseInt(item.condition.estimatedAge) : item.condition.estimatedAge) : 0;
+        
+        // Fixed: Safely check for visibleIssues which might not exist in the condition type
+        const hasIssues = item.condition?.hasOwnProperty('visibleIssues') && 
+          Array.isArray((item.condition as any).visibleIssues) && 
+          (item.condition as any).visibleIssues.length > 0;
+        
+        return age > 10 || item.condition?.overall === 'Poor' || hasIssues;
+      });
+      
+      if (agingHvac.length > 0) {
+        const agingHvacEnergy = agingHvac.reduce((sum, item) => sum + (item.annual_kwh || 0), 0);
+        const potentialSavings = agingHvacEnergy * 0.2; // Conservative 20% savings from maintenance/optimization
+        
+        recommendations.push({
+          id: 'RCM-HVAC-01',
+          title: 'HVAC System Maintenance and Optimization',
+          category: 'RCM',
+          existingCondition: `Your facility has ${agingHvac.length} HVAC units that show signs of aging or inefficiency, consuming approximately ${Math.round(agingHvacEnergy).toLocaleString()} kWh annually.`,
+          recommendation: 'Perform comprehensive maintenance and optimization on HVAC systems, including cleaning coils, checking refrigerant levels, calibrating controls, and ensuring proper operation.',
+          benefits: [
+            'Improved Energy Efficiency: Properly maintained systems use 15-20% less energy',
+            'Extended Equipment Life: Regular maintenance prolongs system lifespan',
+            'Enhanced Comfort: Properly functioning systems provide better temperature and humidity control',
+            'Reduced Breakdown Risk: Preventive maintenance minimizes unexpected failures',
+            'Lower Repair Costs: Early problem detection prevents major issues'
+          ],
+          annualSavings: {
+            energy: potentialSavings,
+            cost: potentialSavings * 0.12, // Assuming $0.12/kWh
+            percentage: agingHvacEnergy > 0 ? Math.round((potentialSavings / agingHvacEnergy) * 100) : 0
+          },
+          implementationCost: {
+            min: agingHvac.length * 300,
+            max: agingHvac.length * 600
+          },
+          paybackPeriod: {
+            min: (agingHvac.length * 300) / (potentialSavings * 0.12),
+            max: (agingHvac.length * 600) / (potentialSavings * 0.12)
+          },
+          applicableEquipment: agingHvac.map(item => item.name || item.equipment_type || 'Unknown HVAC unit'),
+          priority: agingHvac.length > 3 ? 'High' : 'Medium'
+        });
+      }
+      
+      // Smart Thermostats
+      const applicableForSmartThermostats = hvacEquipment.filter(item => 
+        item.equipment_type?.toLowerCase().includes('split') || 
+        item.equipment_type?.toLowerCase().includes('package') ||
+        item.equipment_type?.toLowerCase().includes('furnace') ||
+        item.equipment_type?.toLowerCase().includes('heat pump')
+      );
+      
+      if (applicableForSmartThermostats.length > 0) {
+        const applicableEnergy = applicableForSmartThermostats.reduce((sum, item) => sum + (item.annual_kwh || 0), 0);
+        const potentialSavings = applicableEnergy * 0.15; // 10-15% typical savings from smart thermostats
+        
+        recommendations.push({
+          id: 'EEM-THERM-01',
+          title: 'Smart Thermostat Installation',
+          category: 'EEM',
+          existingCondition: `Your facility has ${applicableForSmartThermostats.length} HVAC systems that could benefit from smart thermostat controls.`,
+          recommendation: 'Install programmable smart thermostats to optimize heating and cooling schedules, reduce unnecessary runtime, and enable remote monitoring and control.',
+          benefits: [
+            'Advanced Scheduling: Set precise temperature schedules to match occupancy patterns',
+            'Remote Access: Control and monitor systems from anywhere via smartphone',
+            'Occupancy Detection: Automatically adjust settings when spaces are unoccupied',
+            'Learning Capabilities: Some models learn patterns and optimize settings automatically',
+            'Maintenance Alerts: Receive notifications about system issues',
+            'Energy Usage Reports: Track consumption and identify opportunities for improvement'
+          ],
+          annualSavings: {
+            energy: potentialSavings,
+            cost: potentialSavings * 0.12, // Assuming $0.12/kWh
+            percentage: applicableEnergy > 0 ? Math.round((potentialSavings / applicableEnergy) * 100) : 0
+          },
+          implementationCost: {
+            min: applicableForSmartThermostats.length * 200,
+            max: applicableForSmartThermostats.length * 350
+          },
+          paybackPeriod: {
+            min: (applicableForSmartThermostats.length * 200) / (potentialSavings * 0.12),
+            max: (applicableForSmartThermostats.length * 350) / (potentialSavings * 0.12)
+          },
+          applicableEquipment: applicableForSmartThermostats.map(item => item.name || item.equipment_type || 'Unknown HVAC unit'),
+          priority: potentialSavings > 1000 ? 'High' : 'Medium'
+        });
+      }
+    }
+    
+    // Appliance Upgrades
+    if (equipmentByCategory['Appliances'] && equipmentByCategory['Appliances'].length > 0) {
+      const appliances = equipmentByCategory['Appliances'];
+      
+      // Refrigerator Upgrades
+      const refrigerators = appliances.filter(item => 
+        item.equipment_type?.toLowerCase().includes('refrigerator') || 
+        item.equipment_type?.toLowerCase().includes('freezer')
+      );
+      
+      if (refrigerators.length > 0) {
+        const oldRefrigerators = refrigerators.filter(item => {
+          // Fixed: Parse as number only if it's a string, otherwise use the number directly
+          const age = item.condition?.estimatedAge ? 
+            (typeof item.condition.estimatedAge === 'string' ? 
+              parseInt(item.condition.estimatedAge) : item.condition.estimatedAge) : 0;
+            
+          return age > 10 || item.condition?.overall === 'Poor';
+        });
+        
+        if (oldRefrigerators.length > 0) {
+          const oldRefrigeratorEnergy = oldRefrigerators.reduce((sum, item) => sum + (item.annual_kwh || 0), 0);
+          const potentialSavings = oldRefrigeratorEnergy * 0.35; // 35% typical savings from new ENERGY STAR refrigerators
+          
+          recommendations.push({
+            id: 'EEM-APPL-01',
+            title: 'ENERGY STAR Refrigerator Upgrades',
+            category: 'EEM',
+            existingCondition: `Your facility has ${oldRefrigerators.length} refrigeration units that are aging or inefficient, consuming approximately ${Math.round(oldRefrigeratorEnergy).toLocaleString()} kWh annually.`,
+            recommendation: 'Replace older refrigeration equipment with ENERGY STAR certified models to reduce energy consumption.',
+            benefits: [
+              'Energy Savings: New models use 35-50% less energy than pre-2000 models',
+              'Better Temperature Control: Improved technology maintains consistent cooling',
+              'Lower Maintenance: New units require fewer repairs',
+              'Reduced Environmental Impact: Lower energy use and modern refrigerants',
+              'Potential Utility Rebates: Many utilities offer incentives for ENERGY STAR upgrades'
+            ],
+            annualSavings: {
+              energy: potentialSavings,
+              cost: potentialSavings * 0.12, // Assuming $0.12/kWh
+              percentage: oldRefrigeratorEnergy > 0 ? Math.round((potentialSavings / oldRefrigeratorEnergy) * 100) : 0
+            },
+            implementationCost: {
+              min: oldRefrigerators.length * 1000,
+              max: oldRefrigerators.length * 2500
+            },
+            paybackPeriod: {
+              min: (oldRefrigerators.length * 1000) / (potentialSavings * 0.12),
+              max: (oldRefrigerators.length * 2500) / (potentialSavings * 0.12)
+            },
+            applicableEquipment: oldRefrigerators.map(item => item.name || item.equipment_type || 'Unknown refrigeration unit'),
+            priority: oldRefrigerators.length > 2 ? 'Medium' : 'Low'
+          });
+        }
+      }
+    }
+    
+    // More tailored recommendations could be added here based on specific equipment types...
+    
+    return recommendations;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-8 w-8 text-emerald-500 animate-spin mr-2" />
+        <span>Loading energy analysis data...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <GlowBox className="p-6">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold">Energy Analysis</h2>
+            <p className="text-muted-foreground">
+              Equipment energy breakdown and conservation measures
+            </p>
+          </div>
+          <div className="flex flex-col xs:flex-row gap-2">
+            <Button 
+              onClick={generateEnergyAnalysis} 
+              className="flex items-center gap-2" 
+              disabled={isLoading}
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Calculator className="h-4 w-4" />}
+              Calculate Energy
+            </Button>
+            {energyData && (
+              <Button 
+                variant="outline" 
+                onClick={downloadAnalysisReport} 
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download Report
+              </Button>
+            )}
+          </div>
+        </div>
+      </GlowBox>
+      
+      {error && (
+        <div className="p-4 bg-destructive/10 rounded-lg border border-destructive/20 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+          <p className="text-destructive">{error}</p>
+        </div>
+      )}
+      
+      {!energyData && !isLoading && !error ? (
+        <GlowBox className="p-6 min-h-[400px] flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-muted-foreground mb-4">
+              No energy analysis data available yet.
+              <br />
+              Click the button below to generate detailed equipment energy calculations.
+            </p>
+            <Button onClick={generateEnergyAnalysis} className="flex items-center gap-1">
+              <Calculator className="h-4 w-4" />
+              Generate Energy Analysis
+            </Button>
+          </div>
+        </GlowBox>
+      ) : energyData ? (
+        <div>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-3 mb-6">
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="details">Equipment Details</TabsTrigger>
+              <TabsTrigger value="savings">Savings Opportunities</TabsTrigger>
+            </TabsList>
+            <TabsContent value="overview">
+              <div className="space-y-6">
+                {/* Energy Summary Card with Charts */}
+                <Card className="bg-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Energy Consumption Dashboard</CardTitle>
+                    <CardDescription>Analysis of your equipment energy usage with detailed insights</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Charts Column */}
+                      <div className="col-span-1 lg:col-span-2 space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* End-Use Breakdown Chart */}
+                          <div className="bg-muted/30 p-4 rounded-lg">
+                            <h3 className="text-sm font-medium mb-3">Equipment Energy Breakdown</h3>
+                            <div className="h-[220px]">
+                              <EndUseBreakdownChart 
+                                data={formatChartData(energyData) as any} 
+                                height={220}
+                                width={300}
+                                className="mx-auto"
+                              />
+                            </div>
+                          </div>
+                          
+                          {/* Comparison with Baseline Chart */}
+                          <div className="bg-muted/30 p-4 rounded-lg">
+                            <h3 className="text-sm font-medium mb-3">Comparison to Baseline</h3>
+                            <div className="h-[220px]">
+                              <BaselineEndUseComparison 
+                                data={formatChartData(energyData) as any} 
+                                height={220}
+                                width={300}
+                                className="mx-auto"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Top Energy Consumers Table */}
+                        <div>
+                          <h3 className="text-sm font-medium mb-3">Top Energy Consumers</h3>
+                          <div className="overflow-x-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Equipment</TableHead>
+                                  <TableHead>Type</TableHead>
+                                  <TableHead className="text-right">Annual kWh</TableHead>
+                                  <TableHead className="text-right">Annual Cost</TableHead>
+                                  <TableHead className="text-right">% of Total</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {energyData.equipment_details
+                                  .sort((a, b) => (b.annual_kwh || 0) - (a.annual_kwh || 0))
+                                  .slice(0, 5)
+                                  .map(item => {
+                                    const percentOfTotal = ((item.annual_kwh || 0) / energyData.total_annual_kwh) * 100;
+                                    return (
+                                      <TableRow key={item.id}>
+                                        <TableCell className="font-medium">
+                                          {item.name || 
+                                            (item.manufacturer && item.model ? `${item.manufacturer} ${item.model}` : 
+                                              (item.equipment_type ? `${item.equipment_type}` : 
+                                                (item.category ? `${item.category} Equipment` : 'Unidentified')))}
+                                        </TableCell>
+                                        <TableCell>{item.equipment_type || 'Unknown'}</TableCell>
+                                        <TableCell className="text-right">{(item.annual_kwh || 0).toLocaleString()}</TableCell>
+                                        <TableCell className="text-right">${(item.energy_cost || 0).toLocaleString()}</TableCell>
+                                        <TableCell className="text-right">{percentOfTotal.toFixed(1)}%</TableCell>
+                                      </TableRow>
+                                    );
+                                  })}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Summary and Insights Column */}
+                      <div className="space-y-6">
+                        {/* Key Metrics */}
+                        <div className="bg-muted/30 p-4 rounded-lg">
+                          <h3 className="text-sm font-medium mb-3">Energy Summary</h3>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-muted-foreground">Total Annual Energy:</span>
+                              <span className="font-medium">{energyData.total_annual_kwh.toLocaleString()} kWh</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-muted-foreground">Total Annual Cost:</span>
+                              <span className="font-medium">${energyData.total_annual_cost.toLocaleString()}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-muted-foreground">Equipment Items:</span>
+                              <span className="font-medium">{energyData.equipment_details.length}</span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-muted-foreground">Average Cost:</span>
+                              <span className="font-medium">${(energyData.total_annual_cost / 12).toLocaleString()}/month</span>
+                            </div>
+                            {!isLoadingUtilityData && actualTotalUsage > 0 && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-muted-foreground">Energy Coverage:</span>
+                                <span className={`font-medium ${
+                                  (energyData.total_annual_kwh / actualTotalUsage) < 0.5 ? 'text-red-500' :
+                                  (energyData.total_annual_kwh / actualTotalUsage) < 0.8 ? 'text-amber-500' :
+                                  'text-emerald-500'
+                                }`}>
+                                  {Math.round(energyData.total_annual_kwh / actualTotalUsage * 100)}%
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Category Breakdown */}
+                        <div className="bg-muted/30 p-4 rounded-lg">
+                          <h3 className="text-sm font-medium mb-3">Category Breakdown</h3>
+                          <div className="space-y-3">
+                            {Object.entries(energyData.by_category)
+                              .sort(([_, a], [__, b]) => b.percentage - a.percentage)
+                              .map(([category, data]) => (
+                                <div key={category} className="flex justify-between items-center">
+                                  <div className="flex items-center">
+                                    <div className={`w-3 h-3 rounded-full mr-2 bg-${getCategoryColor(category)}`}></div>
+                                    <span className="text-sm">{category}</span>
+                                  </div>
+                                  <div className="text-sm font-medium">
+                                    {data.percentage.toFixed(1)}% ({formatKwh(data.annual_kwh)})
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                        
+                        {/* Quick Insights */}
+                        <div className="bg-muted/30 p-4 rounded-lg">
+                          <h3 className="text-sm font-medium mb-3">Quick Insights</h3>
+                          <div className="space-y-3 text-sm">
+                            {/* Most energy-intensive category */}
+                            {Object.entries(energyData.by_category).length > 0 && (
+                              <div className="p-2 bg-background/50 rounded border-l-2 border-blue-500">
+                                <p className="font-medium">
+                                  {Object.entries(energyData.by_category)
+                                    .sort(([_, a], [__, b]) => b.percentage - a.percentage)[0][0]} 
+                                  is your largest energy consumer at 
+                                  {Object.entries(energyData.by_category)
+                                    .sort(([_, a], [__, b]) => b.percentage - a.percentage)[0][1].percentage.toFixed(1)}%
+                                </p>
+                              </div>
+                            )}
+                            
+                            {/* Inventory completeness */}
+                            {!energyData.by_category['HVAC'] && (
+                              <div className="p-2 bg-background/50 rounded border-l-2 border-amber-500">
+                                <p>Missing HVAC equipment data (typically 40-45% of building energy)</p>
+                              </div>
+                            )}
+                            
+                            {!energyData.by_category['Lighting'] && (
+                              <div className="p-2 bg-background/50 rounded border-l-2 border-amber-500">
+                                <p>Missing lighting equipment data (typically 20-25% of building energy)</p>
+                              </div>
+                            )}
+                            
+                            {/* Energy saving potential */}
+                            <div className="p-2 bg-background/50 rounded border-l-2 border-emerald-500">
+                              <p className="font-medium">
+                                Potential annual savings: ${Math.round(
+                                  (energyData.by_category['Lighting']?.annual_cost * 0.6 || 0) +
+                                  (energyData.by_category['HVAC']?.annual_cost * 0.2 || 0) +
+                                  (energyData.by_category['Appliances']?.annual_cost * 0.25 || 0)
+                                ).toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Equipment Summary Card - NEW */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Equipment Inventory Summary</CardTitle>
+                    <CardDescription>Detailed breakdown of your documented equipment</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Equipment Statistics */}
+                      <div>
+                        <h3 className="text-sm font-medium mb-3">Equipment Statistics</h3>
+                        <div className="space-y-4">
+                          {/* Equipment Counts by Category */}
+                          <div className="p-3 bg-muted/30 rounded-lg">
+                            <h4 className="font-medium mb-2">Equipment Counts by Category</h4>
+                            <div className="space-y-2">
+                              {Object.entries(
+                                energyData.equipment_details.reduce((acc, item) => {
+                                  const category = item.category || 'Uncategorized';
+                                  acc[category] = (acc[category] || 0) + 1;
+                                  return acc;
+                                }, {} as Record<string, number>)
+                              )
+                                .sort(([_, a], [__, b]) => b - a)
+                                .map(([category, count]) => (
+                                  <div key={category} className="flex justify-between">
+                                    <span className="text-sm">{category}:</span>
+                                    <span className="text-sm font-medium">{count} items</span>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+
+                          {/* Equipment Types */}
+                          <div className="p-3 bg-muted/30 rounded-lg">
+                            <h4 className="font-medium mb-2">Top Equipment Types</h4>
+                            <div className="space-y-2">
+                              {Object.entries(
+                                energyData.equipment_details.reduce((acc, item) => {
+                                  const type = item.equipment_type || 'Unknown';
+                                  acc[type] = (acc[type] || 0) + 1;
+                                  return acc;
+                                }, {} as Record<string, number>)
+                              )
+                                .sort(([_, a], [__, b]) => b - a)
+                                .slice(0, 5)
+                                .map(([type, count]) => (
+                                  <div key={type} className="flex justify-between">
+                                    <span className="text-sm">{type}:</span>
+                                    <span className="text-sm font-medium">{count} items</span>
+                                  </div>
+                                ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Equipment Operation Analysis */}
+                      <div>
+                        <h3 className="text-sm font-medium mb-3">Operation Analysis</h3>
+                        <div className="space-y-4">
+                          {/* Operating Hours Analysis */}
+                          <div className="p-3 bg-muted/30 rounded-lg">
+                            <h4 className="font-medium mb-2">Operating Hours</h4>
+                            <div className="space-y-1">
+                              {(() => {
+                                const avgHours = energyData.equipment_details.reduce(
+                                  (sum, item) => sum + (item.operating_hours || 0),
+                                  0
+                                ) / energyData.equipment_details.length;
+                                
+                                const maxHours = Math.max(
+                                  ...energyData.equipment_details.map(item => item.operating_hours || 0)
+                                );
+                                
+                                const nonZeroItems = energyData.equipment_details.filter(
+                                  item => (item.operating_hours || 0) > 0
+                                );
+                                
+                                const continuousEquipment = energyData.equipment_details.filter(
+                                  item => (item.operating_hours || 0) >= 20
+                                );
+                                
+                                return (
+                                  <>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm">Average Daily Operation:</span>
+                                      <span className="text-sm font-medium">{avgHours.toFixed(1)} hours</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm">Maximum Daily Operation:</span>
+                                      <span className="text-sm font-medium">{maxHours} hours</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm">Equipment Running 24/7:</span>
+                                      <span className="text-sm font-medium">
+                                        {energyData.equipment_details.filter(item => 
+                                          (item.operating_hours || 0) >= 24 && 
+                                          (item.days_per_week || 0) >= 7
+                                        ).length} items
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm">Continuous Operation (20+ hrs):</span>
+                                      <span className="text-sm font-medium">{continuousEquipment.length} items</span>
+                                    </div>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          </div>
+
+                          {/* Efficiency Assessment */}
+                          <div className="p-3 bg-muted/30 rounded-lg">
+                            <h4 className="font-medium mb-2">Efficiency Assessment</h4>
+                            <div className="space-y-2">
+                              {(() => {
+                                // Calculate high wattage equipment (over 1000W)
+                                const highWattageEquipment = energyData.equipment_details.filter(
+                                  item => (item.wattage || 0) > 1000
+                                );
+                                
+                                // Calculate equipment with low load factors (under 30%)
+                                const lowLoadFactorEquipment = energyData.equipment_details.filter(
+                                  item => {
+                                    const loadFactor = parseFloat(item.load_factor || '0');
+                                    return loadFactor > 0 && loadFactor < 0.3;
+                                  }
+                                );
+                                
+                                return (
+                                  <>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm">High-Wattage Equipment (1000W+):</span>
+                                      <span className="text-sm font-medium">{highWattageEquipment.length} items</span>
+                                    </div>
+                                    {highWattageEquipment.length > 0 && (
+                                      <div className="ml-4 text-xs text-muted-foreground">
+                                        Top: {highWattageEquipment
+                                          .sort((a, b) => (b.wattage || 0) - (a.wattage || 0))
+                                          .slice(0, 2)
+                                          .map(item => `${item.name || item.equipment_type || 'Unnamed'} (${item.wattage}W)`)
+                                          .join(', ')}
+                                      </div>
+                                    )}
+                                    <div className="flex justify-between">
+                                      <span className="text-sm">Low Load Factor Equipment:</span>
+                                      <span className="text-sm font-medium">{lowLoadFactorEquipment.length} items</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm">Equipment with Zero Hours:</span>
+                                      <span className="text-sm font-medium">
+                                        {energyData.equipment_details.filter(
+                                          item => (item.operating_hours || 0) === 0
+                                        ).length} items
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span className="text-sm">Missing Wattage Information:</span>
+                                      <span className="text-sm font-medium">
+                                        {energyData.equipment_details.filter(
+                                          item => !item.wattage || item.wattage === 0
+                                        ).length} items
+                                      </span>
+                                    </div>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Key Findings Card */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Key Analysis Findings</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Equipment vs. Benchmark */}
+                      <div>
+                        <h3 className="text-sm font-medium mb-3">Equipment vs. Industry Benchmarks</h3>
+                        <div className="space-y-4">
+                          {/* HVAC Analysis */}
+                          <div className="p-3 bg-muted/30 rounded-lg">
+                            <div className="flex items-start gap-3">
+                              <div className={`w-4 h-4 rounded-full mt-1 bg-${getCategoryColor('HVAC')}`}></div>
+                              <div>
+                                <h4 className="font-medium">HVAC</h4>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  {energyData.by_category['HVAC'] ? 
+                                    `Your HVAC accounts for ${energyData.by_category['HVAC'].percentage.toFixed(1)}% of energy usage (industry avg: 40-45%)` : 
+                                    'No HVAC equipment recorded (industry avg: 40-45%)'
+                                  }
+                                </p>
+                                <div className="text-sm">
+                                  {energyData.by_category['HVAC'] ? (
+                                    energyData.by_category['HVAC'].percentage > 45 ? 
+                                      <p className="text-amber-600">Higher than typical - check for inefficiencies</p> :
+                                      energyData.by_category['HVAC'].percentage < 35 ?
+                                        <p className="text-blue-600">Lower than typical - possible incomplete inventory</p> :
+                                        <p className="text-emerald-600">Within typical range</p>
+                                  ) : (
+                                    <p className="text-amber-600">Incomplete data - add HVAC equipment for accurate analysis</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Lighting Analysis */}
+                          <div className="p-3 bg-muted/30 rounded-lg">
+                            <div className="flex items-start gap-3">
+                              <div className={`w-4 h-4 rounded-full mt-1 bg-${getCategoryColor('Lighting')}`}></div>
+                              <div>
+                                <h4 className="font-medium">Lighting</h4>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  {energyData.by_category['Lighting'] ? 
+                                    `Your lighting accounts for ${energyData.by_category['Lighting'].percentage.toFixed(1)}% of energy usage (industry avg: 20-25%)` : 
+                                    'No lighting equipment recorded (industry avg: 20-25%)'
+                                  }
+                                </p>
+                                <div className="text-sm">
+                                  {energyData.by_category['Lighting'] ? (
+                                    energyData.by_category['Lighting'].percentage > 25 ? 
+                                      <p className="text-amber-600">Higher than typical - consider LED upgrades</p> :
+                                      energyData.by_category['Lighting'].percentage < 15 ?
+                                        <p className="text-blue-600">Lower than typical - possible efficient systems or incomplete inventory</p> :
+                                        <p className="text-emerald-600">Within typical range</p>
+                                  ) : (
+                                    <p className="text-amber-600">Incomplete data - add lighting equipment for accurate analysis</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Appliances Analysis */}
+                          <div className="p-3 bg-muted/30 rounded-lg">
+                            <div className="flex items-start gap-3">
+                              <div className={`w-4 h-4 rounded-full mt-1 bg-${getCategoryColor('Appliances')}`}></div>
+                              <div>
+                                <h4 className="font-medium">Appliances</h4>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  {energyData.by_category['Appliances'] ? 
+                                    `Your appliances account for ${energyData.by_category['Appliances'].percentage.toFixed(1)}% of energy usage (industry avg: 15-20%)` : 
+                                    'No appliance equipment recorded (industry avg: 15-20%)'
+                                  }
+                                </p>
+                                <div className="text-sm">
+                                  {energyData.by_category['Appliances'] ? (
+                                    energyData.by_category['Appliances'].percentage > 20 ? 
+                                      <p className="text-amber-600">Higher than typical - check for old inefficient appliances</p> :
+                                      energyData.by_category['Appliances'].percentage < 10 ?
+                                        <p className="text-blue-600">Lower than typical - possible efficient systems or incomplete inventory</p> :
+                                        <p className="text-emerald-600">Within typical range</p>
+                                  ) : (
+                                    <p className="text-amber-600">Incomplete data - add appliance equipment for accurate analysis</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Recommendations and Actions */}
+                      <div>
+                        <h3 className="text-sm font-medium mb-3">Recommended Actions</h3>
+                        <div className="space-y-4">
+                          {/* Incomplete inventory guidance */}
+                          {(!energyData.by_category['HVAC'] || !energyData.by_category['Lighting'] || 
+                            (actualTotalUsage > 0 && (energyData.total_annual_kwh / actualTotalUsage) < 0.7)) && (
+                            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                              <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-1">Complete Your Equipment Inventory</h4>
+                              <p className="text-sm text-blue-700 dark:text-blue-300">
+                                Your equipment analysis is incomplete. For an accurate assessment, add all major energy-consuming equipment:
+                              </p>
+                              <ul className="list-disc list-inside text-sm text-blue-700 dark:text-blue-300 mt-2">
+                                {!energyData.by_category['HVAC'] && <li>HVAC systems (heating, cooling, ventilation)</li>}
+                                {!energyData.by_category['Lighting'] && <li>Lighting fixtures and lamps</li>}
+                                {!energyData.by_category['Appliances'] && <li>Major appliances and equipment</li>}
+                                <li>Update equipment specifications (wattage, hours, etc.)</li>
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {/* Energy saving opportunities */}
+                          <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                            <h4 className="font-medium text-emerald-700 dark:text-emerald-300 mb-1">Energy Saving Opportunities</h4>
+                            <p className="text-sm text-emerald-700 dark:text-emerald-300 mb-2">
+                              Based on your equipment data, these measures could reduce your energy consumption:
+                            </p>
+                            <div className="space-y-2">
+                              {(energyData.by_category['Lighting']?.annual_kwh || 0) > 0 && (
+                                <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-300">
+                                  <span>• LED lighting upgrades:</span>
+                                  <span className="font-medium">${Math.round(energyData.by_category['Lighting']?.annual_cost * 0.6).toLocaleString()}/yr</span>
+                                </div>
+                              )}
+                              {(energyData.by_category['HVAC']?.annual_kwh || 0) > 0 && (
+                                <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-300">
+                                  <span>• HVAC optimization:</span>
+                                  <span className="font-medium">${Math.round(energyData.by_category['HVAC']?.annual_cost * 0.2).toLocaleString()}/yr</span>
+                                </div>
+                              )}
+                              {(energyData.by_category['Appliances']?.annual_kwh || 0) > 0 && (
+                                <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-300">
+                                  <span>• Energy efficient appliances:</span>
+                                  <span className="font-medium">${Math.round(energyData.by_category['Appliances']?.annual_cost * 0.25).toLocaleString()}/yr</span>
+                                </div>
+                              )}
+                              <div className="flex justify-between text-sm text-emerald-700 dark:text-emerald-300 font-medium pt-1 mt-1 border-t border-emerald-200 dark:border-emerald-800">
+                                <span>Total potential savings:</span>
+                                <span>${Math.round(
+                                  (energyData.by_category['Lighting']?.annual_cost * 0.6 || 0) +
+                                  (energyData.by_category['HVAC']?.annual_cost * 0.2 || 0) +
+                                  (energyData.by_category['Appliances']?.annual_cost * 0.25 || 0)
+                                ).toLocaleString()}/yr</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Next Steps */}
+                          <div className="p-3 bg-muted/30 rounded-lg">
+                            <h4 className="font-medium mb-1">Next Steps</h4>
+                            <ul className="list-disc list-inside text-sm space-y-1 text-muted-foreground">
+                              <li>Review equipment details tab for high-usage items</li>
+                              <li>Export analysis report to share with stakeholders</li>
+                              <li>Consider professional energy audit for validation</li>
+                              <li>Prioritize conservation measures based on ROI</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Equipment Details Tab */}
+            <TabsContent value="details">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg">Detailed Equipment Energy Calculations</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <EquipmentTable equipment={energyData.equipment_details} />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Conservation Measures Tab */}
+            <TabsContent value="savings">
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">Tailored Energy Conservation Measures</CardTitle>
+                    <CardDescription>
+                      Specific recommendations based on your equipment inventory and building characteristics
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {(() => {
+                      // Generate ECM recommendations based on equipment data
+                      let ecmRecommendations = generateECMRecommendations(energyData.equipment_details);
+                      
+                      // Add preliminary ECMs from comprehensive recommendations at the beginning
+                      if (comprehensiveRecommendations.length > 0) {
+                        ecmRecommendations = [...comprehensiveRecommendations, ...ecmRecommendations];
+                      }
+                      
+                      if (ecmRecommendations.length === 0) {
+                        return (
+                          <div className="py-8 text-center">
+                            <div className="mb-4 text-amber-500">
+                              <AlertCircle className="h-12 w-12 mx-auto" />
+                            </div>
+                            <h3 className="text-lg font-medium mb-2">Insufficient Equipment Data</h3>
+                            <p className="text-muted-foreground max-w-md mx-auto">
+                              To generate detailed conservation measures, please ensure your equipment inventory includes 
+                              detailed specifications, operating hours, and condition information.
+                            </p>
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div className="space-y-8">
+                          {/* Group ECMs by category */}
+                          {(() => {
+                            // Group ECMs by category
+                            const ecmsByCategory: Record<string, any[]> = {};
+                            
+                            // First, add preliminary ECMs if they exist
+                            if (comprehensiveRecommendations.length > 0) {
+                              ecmsByCategory['Preliminary'] = comprehensiveRecommendations;
+                            }
+                            
+                            // Then add other ECMs by their categories
+                            ecmRecommendations
+                              .filter(ecm => ecm.category !== 'Preliminary')
+                              .forEach(ecm => {
+                                if (!ecmsByCategory[ecm.category]) {
+                                  ecmsByCategory[ecm.category] = [];
+                                }
+                                ecmsByCategory[ecm.category].push(ecm);
+                              });
+                            
+                            // Render each category
+                            return Object.entries(ecmsByCategory).map(([category, ecms]) => (
+                              <div key={category} className="mb-8">
+                                <h3 className="text-lg font-medium mb-4">{category} Recommendations</h3>
+                                <div className="space-y-6">
+                                  {ecms.map(ecm => (
+                            <div key={ecm.id} className="border rounded-lg overflow-hidden">
+                              <div className={`p-4 ${
+                                ecm.category === 'EEM' ? 'bg-blue-50 dark:bg-blue-900/20' : 
+                                ecm.category === 'WEM' ? 'bg-emerald-50 dark:bg-emerald-900/20' : 
+                                'bg-amber-50 dark:bg-amber-900/20'
+                              }`}>
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <Badge variant="outline" className={
+                                      ecm.category === 'EEM' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 
+                                      ecm.category === 'WEM' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200' : 
+                                      'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200'
+                                    }>
+                                      {ecm.category === 'EEM' ? 'Energy' : 
+                                       ecm.category === 'WEM' ? 'Water' : 
+                                       'Maintenance'} Measure
+                                    </Badge>
+                                    <h3 className="text-lg font-medium mt-2">{ecm.title}</h3>
+                                  </div>
+                                  <Badge variant={
+                                    ecm.priority === 'High' ? 'default' : 
+                                    ecm.priority === 'Medium' ? 'secondary' : 
+                                    'outline'
+                                  }>
+                                    {ecm.priority} Priority
+                                  </Badge>
+                                </div>
+                              </div>
+                              
+                              <div className="p-4 border-t">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                  <div>
+                                    <h4 className="font-medium mb-2">Current Condition</h4>
+                                    <p className="text-sm text-muted-foreground mb-4">{ecm.existingCondition}</p>
+                                    
+                                    <h4 className="font-medium mb-2">Recommendation</h4>
+                                    <p className="text-sm text-muted-foreground mb-4">{ecm.recommendation}</p>
+                                    
+                                    <h4 className="font-medium mb-2">Benefits</h4>
+                                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 mb-4">
+                                      {ecm.benefits.map((benefit, index) => (
+                                        <li key={index}>{benefit}</li>
+                                      ))}
+                                    </ul>
+                                    
+                                    {ecm.applicableEquipment.length > 0 && (
+                                      <>
+                                        <h4 className="font-medium mb-2">Applicable Equipment</h4>
+                                        <div className="text-sm text-muted-foreground mb-4">
+                                          {ecm.applicableEquipment.length > 5 ? (
+                                            <div>
+                                              <p>{ecm.applicableEquipment.length} items including:</p>
+                                              <ul className="list-disc list-inside">
+                                                {ecm.applicableEquipment.slice(0, 5).map((item, index) => (
+                                                  <li key={index}>{item}</li>
+                                                ))}
+                                                <li>and {ecm.applicableEquipment.length - 5} more...</li>
+                                              </ul>
+                                            </div>
+                                          ) : (
+                                            <ul className="list-disc list-inside">
+                                              {ecm.applicableEquipment.map((item, index) => (
+                                                <li key={index}>{item}</li>
+                                              ))}
+                                            </ul>
+                                          )}
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                  
+                                  <div>
+                                    <div className="bg-muted/30 p-4 rounded-lg mb-4">
+                                      <h4 className="font-medium mb-3">Potential Annual Savings</h4>
+                                      <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                          <span className="text-sm">Energy Savings:</span>
+                                          <span className="text-sm font-medium">{Math.round(ecm.annualSavings.energy).toLocaleString()} kWh/year</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className="text-sm">Cost Savings:</span>
+                                          <span className="text-sm font-medium">${Math.round(ecm.annualSavings.cost).toLocaleString()}/year</span>
+                                        </div>
+                                        {ecm.annualSavings.percentage > 0 && (
+                                          <div className="flex justify-between">
+                                            <span className="text-sm">Energy Reduction:</span>
+                                            <span className="text-sm font-medium">{ecm.annualSavings.percentage}%</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="bg-muted/30 p-4 rounded-lg mb-4">
+                                      <h4 className="font-medium mb-3">Implementation</h4>
+                                      <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                          <span className="text-sm">Estimated Cost:</span>
+                                          <span className="text-sm font-medium">
+                                            ${Math.round(ecm.implementationCost.min).toLocaleString()} - ${Math.round(ecm.implementationCost.max).toLocaleString()}
+                                          </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                          <span className="text-sm">Simple Payback:</span>
+                                          <span className="text-sm font-medium">
+                                            {ecm.paybackPeriod.min.toFixed(1)} - {ecm.paybackPeriod.max.toFixed(1)} years
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    {ecm.notes && (
+                                      <div className="bg-muted/30 p-4 rounded-lg">
+                                        <h4 className="font-medium mb-2">Notes</h4>
+                                        <p className="text-sm text-muted-foreground">{ecm.notes}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          
+                          <div className="bg-muted/30 p-4 rounded-lg">
+                            <h4 className="font-medium mb-2">Methodology</h4>
+                            <p className="text-sm text-muted-foreground">
+                              These recommendations are automatically generated based on your specific equipment inventory, 
+                              building characteristics, field notes, photo analysis, and industry best practices. Savings calculations use your actual equipment 
+                              data and conservative efficiency improvement estimates. Implementation costs and payback periods 
+                              are estimates and may vary based on local conditions and contractors.
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-2">
+                              <strong>Preliminary recommendations</strong> are derived from field notes and photo analysis, providing early insights before detailed energy calculations.
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </CardContent>
+                </Card>
+                
+                <GlowBox className="p-6">
+                  <h3 className="text-xl font-bold mb-4">Summary of Energy Conservation Potential</h3>
+                  <p className="text-muted-foreground mb-6">
+                    Based on your equipment inventory analysis, here is a summary of potential energy savings by category:
+                  </p>
+                  
+                  <div className="space-y-4">
+                    {/* Lighting ECMs */}
+                    {(energyData.by_category['Lighting']?.annual_kwh || 0) > 0 && (
+                      <div className="p-4 border rounded-lg bg-card">
+                        <h4 className="font-medium mb-2">Lighting Upgrades</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Upgrading lighting to LED can reduce lighting energy consumption by up to 75%.
+                        </p>
+                        <div className="text-sm">
+                          <span className="font-medium">Potential annual savings:</span> 
+                          <span className="text-emerald-600 ml-1">
+                            {Math.round(energyData.by_category['Lighting']?.annual_kwh * 0.6).toLocaleString()} kWh 
+                            (${Math.round(energyData.by_category['Lighting']?.annual_cost * 0.6).toLocaleString()})
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* HVAC ECMs */}
+                    {(energyData.by_category['HVAC']?.annual_kwh || 0) > 0 && (
+                      <div className="p-4 border rounded-lg bg-card">
+                        <h4 className="font-medium mb-2">HVAC Optimization</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Implementing advanced controls and regular maintenance can reduce HVAC energy by 15-30%.
+                        </p>
+                        <div className="text-sm">
+                          <span className="font-medium">Potential annual savings:</span> 
+                          <span className="text-emerald-600 ml-1">
+                            {Math.round(energyData.by_category['HVAC']?.annual_kwh * 0.2).toLocaleString()} kWh 
+                            (${Math.round(energyData.by_category['HVAC']?.annual_cost * 0.2).toLocaleString()})
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Appliance ECMs */}
+                    {(energyData.by_category['Appliances']?.annual_kwh || 0) > 0 && (
+                      <div className="p-4 border rounded-lg bg-card">
+                        <h4 className="font-medium mb-2">Energy Efficient Appliances</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Replacing old appliances with ENERGY STAR models can reduce appliance energy by up to 25%.
+                        </p>
+                        <div className="text-sm">
+                          <span className="font-medium">Potential annual savings:</span> 
+                          <span className="text-emerald-600 ml-1">
+                            {Math.round(energyData.by_category['Appliances']?.annual_kwh * 0.25).toLocaleString()} kWh 
+                            (${Math.round(energyData.by_category['Appliances']?.annual_cost * 0.25).toLocaleString()})
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Total potential savings */}
+                    <div className="p-4 border rounded-lg bg-muted">
+                      <h4 className="font-medium mb-2">Total Potential Savings</h4>
+                      <div className="text-sm">
+                        <div className="flex justify-between mb-1">
+                          <span>Energy Savings:</span>
+                          <span className="font-medium text-emerald-600">
+                            {Math.round(
+                              (energyData.by_category['Lighting']?.annual_kwh * 0.6 || 0) +
+                              (energyData.by_category['HVAC']?.annual_kwh * 0.2 || 0) +
+                              (energyData.by_category['Appliances']?.annual_kwh * 0.25 || 0)
+                            ).toLocaleString()} kWh/year
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Cost Savings:</span>
+                          <span className="font-medium text-emerald-600">
+                            ${Math.round(
+                              (energyData.by_category['Lighting']?.annual_cost * 0.6 || 0) +
+                              (energyData.by_category['HVAC']?.annual_cost * 0.2 || 0) +
+                              (energyData.by_category['Appliances']?.annual_cost * 0.25 || 0)
+                            ).toLocaleString()}/year
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </GlowBox>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      ) : null}
+    </div>
+  );
+}; 

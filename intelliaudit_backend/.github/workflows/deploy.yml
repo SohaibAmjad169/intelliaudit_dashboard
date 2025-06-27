@@ -1,0 +1,31 @@
+name: VertPro Workflow
+
+# Define events
+on:
+  push:
+    # add acting branches
+    branches: [ main, dev ]
+
+jobs:
+  # Production Deploy Job
+  Production-Deploy:
+    runs-on: ubuntu-latest
+    
+    # Check branch reference
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    # Checkout to the branch
+    - uses: actions/checkout@v2
+    
+    # Deploy to the server.
+    - name: Deploying to VertPro Production Server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.PROD_HOST }}
+
+        username: ${{ secrets.PROD_USERNAME }}
+        key: ${{ secrets.PROD_KEY }}
+        port: ${{ secrets.PROD_PORT }}
+        script: sh deploy.sh
+        

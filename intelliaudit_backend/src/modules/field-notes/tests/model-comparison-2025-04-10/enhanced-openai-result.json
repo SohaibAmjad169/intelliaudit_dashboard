@@ -1,0 +1,363 @@
+{
+  "building_info": {
+    "type": "multifamily",
+    "total_units": 49,
+    "unit_types": [
+      {
+        "type": "two bedrooms, one bathroom",
+        "count": 10,
+        "description": "Two-bedroom units with one bathroom"
+      },
+      {
+        "type": "one bedroom, one bathroom",
+        "count": 18,
+        "description": "One-bedroom units with one bathroom"
+      },
+      {
+        "type": "studio, one bathroom",
+        "count": 21,
+        "description": "Studio units with one bathroom"
+      }
+    ],
+    "floors": 2,
+    "address": "4623 La Mirada Ave, Los Angeles, CA 90029",
+    "square_footage": null
+  },
+  "equipment": [
+    {
+      "equipment_type": "LED lighting",
+      "manufacturer": "Unknown",
+      "model": "Unknown",
+      "category": "Lighting",
+      "quantity": 4,
+      "location": "Front exterior southside",
+      "location_type": "Exterior",
+      "energy_source": "Electricity",
+      "wattage": 9.5,
+      "capacity": "N/A",
+      "efficiency": "N/A",
+      "efficiency_unit": "N/A",
+      "hours_per_week": 84,
+      "days_per_week": 7,
+      "annual_kwh": 1.99,
+      "annual_hours": 4380,
+      "input_rating": null,
+      "flow_rate": "N/A",
+      "temperature_rise": null,
+      "load_factor": null,
+      "confidence": 0.9,
+      "assumptions": [
+        "Assumed 12 hours of operation per day for exterior lighting"
+      ],
+      "recommendations": "Consider upgrading to higher efficiency fixtures.",
+      "end_use_category": "Lighting"
+    },
+    {
+      "equipment_type": "LED lighting",
+      "manufacturer": "Unknown",
+      "model": "Unknown",
+      "category": "Lighting",
+      "quantity": 2,
+      "location": "Front exterior southside",
+      "location_type": "Exterior",
+      "energy_source": "Electricity",
+      "wattage": 9.5,
+      "capacity": "N/A",
+      "efficiency": "N/A",
+      "efficiency_unit": "N/A",
+      "hours_per_week": 84,
+      "days_per_week": 7,
+      "annual_kwh": 0.99,
+      "annual_hours": 4380,
+      "input_rating": null,
+      "flow_rate": "N/A",
+      "temperature_rise": null,
+      "load_factor": null,
+      "confidence": 0.9,
+      "assumptions": [
+        "Assumed 12 hours of operation per day for exterior lighting"
+      ],
+      "recommendations": "Consider upgrading to higher efficiency fixtures.",
+      "end_use_category": "Lighting"
+    },
+    {
+      "equipment_type": "CFL lighting",
+      "manufacturer": "Unknown",
+      "model": "Unknown",
+      "category": "Lighting",
+      "quantity": 4,
+      "location": "Exterior east side",
+      "location_type": "Exterior",
+      "energy_source": "Electricity",
+      "wattage": 13,
+      "capacity": "N/A",
+      "efficiency": "N/A",
+      "efficiency_unit": "N/A",
+      "hours_per_week": 84,
+      "days_per_week": 7,
+      "annual_kwh": 1.82,
+      "annual_hours": 4380,
+      "input_rating": null,
+      "flow_rate": "N/A",
+      "temperature_rise": null,
+      "load_factor": null,
+      "confidence": 0.9,
+      "assumptions": [
+        "Assumed 12 hours of operation per day for exterior lighting"
+      ],
+      "recommendations": "Consider upgrading to LED fixtures.",
+      "end_use_category": "Lighting"
+    },
+    {
+      "equipment_type": "Refrigerator",
+      "manufacturer": "Unknown",
+      "model": "Unknown",
+      "category": "Appliances",
+      "quantity": 49,
+      "location": "Units",
+      "location_type": "In-unit",
+      "energy_source": "Electricity",
+      "wattage": 700,
+      "capacity": "N/A",
+      "efficiency": "N/A",
+      "efficiency_unit": "N/A",
+      "hours_per_week": 168,
+      "days_per_week": 7,
+      "annual_kwh": 34300,
+      "annual_hours": 8760,
+      "input_rating": null,
+      "flow_rate": "N/A",
+      "temperature_rise": null,
+      "load_factor": null,
+      "confidence": 0.9,
+      "assumptions": [
+        "Assumed 40% duty cycle for continuous operation."
+      ],
+      "recommendations": "Encourage tenants to use energy-efficient models.",
+      "end_use_category": "Refrigeration"
+    },
+    {
+      "equipment_type": "Electric stove/oven",
+      "manufacturer": "Unknown",
+      "model": "Unknown",
+      "category": "Cooking",
+      "quantity": 49,
+      "location": "Units",
+      "location_type": "In-unit",
+      "energy_source": "Electricity",
+      "wattage": 3000,
+      "capacity": "N/A",
+      "efficiency": "N/A",
+      "efficiency_unit": "N/A",
+      "hours_per_week": 7,
+      "days_per_week": 7,
+      "annual_kwh": 1790,
+      "annual_hours": 365,
+      "input_rating": null,
+      "flow_rate": "N/A",
+      "temperature_rise": null,
+      "load_factor": null,
+      "confidence": 0.9,
+      "assumptions": [
+        "Assumed 1-2 hours of operation per day."
+      ],
+      "recommendations": "Consider energy-efficient cooking appliances.",
+      "end_use_category": "Cooking"
+    },
+    {
+      "equipment_type": "PTAC unit",
+      "manufacturer": "Gibson",
+      "model": "Unknown",
+      "category": "HVAC",
+      "quantity": 49,
+      "location": "Units",
+      "location_type": "In-unit",
+      "energy_source": "Electricity",
+      "wattage": 2000,
+      "capacity": "N/A",
+      "efficiency": "N/A",
+      "efficiency_unit": "N/A",
+      "hours_per_week": 50,
+      "days_per_week": 7,
+      "annual_kwh": 10400,
+      "annual_hours": 2000,
+      "input_rating": null,
+      "flow_rate": "N/A",
+      "temperature_rise": null,
+      "load_factor": null,
+      "confidence": 0.9,
+      "assumptions": [
+        "Assumed 2000 hours of operation for cooling."
+      ],
+      "recommendations": "Regular maintenance for optimal performance.",
+      "end_use_category": "Cooling"
+    },
+    {
+      "equipment_type": "Electric wall heater",
+      "manufacturer": "Unknown",
+      "model": "Unknown",
+      "category": "HVAC",
+      "quantity": 49,
+      "location": "Units",
+      "location_type": "In-unit",
+      "energy_source": "Electricity",
+      "wattage": 1500,
+      "capacity": "N/A",
+      "efficiency": "N/A",
+      "efficiency_unit": "N/A",
+      "hours_per_week": 15,
+      "days_per_week": 7,
+      "annual_kwh": 1170,
+      "annual_hours": 780,
+      "input_rating": null,
+      "flow_rate": "N/A",
+      "temperature_rise": null,
+      "load_factor": null,
+      "confidence": 0.9,
+      "assumptions": [
+        "Assumed 1.5 hours of operation per day during winter."
+      ],
+      "recommendations": "Consider weatherization measures.",
+      "end_use_category": "Heating"
+    },
+    {
+      "equipment_type": "Hot water heater",
+      "manufacturer": "Unknown",
+      "model": "Unknown",
+      "category": "Water Heating",
+      "quantity": 2,
+      "location": "Mechanical room",
+      "location_type": "Common area",
+      "energy_source": "Gas",
+      "wattage": null,
+      "capacity": "N/A",
+      "efficiency": "N/A",
+      "efficiency_unit": "N/A",
+      "hours_per_week": 40,
+      "days_per_week": 7,
+      "annual_kwh": 0,
+      "annual_hours": 0,
+      "input_rating": null,
+      "flow_rate": "N/A",
+      "temperature_rise": null,
+      "load_factor": null,
+      "confidence": 0.8,
+      "assumptions": [
+        "Assumed gas water heaters, no specific wattage provided."
+      ],
+      "recommendations": "Ensure regular maintenance and efficiency checks.",
+      "end_use_category": "Water Heating"
+    },
+    {
+      "equipment_type": "Pool filter",
+      "manufacturer": "Unknown",
+      "model": "Unknown",
+      "category": "Pool/Spa",
+      "quantity": 1,
+      "location": "Mechanical room",
+      "location_type": "Common area",
+      "energy_source": "Electricity",
+      "wattage": 500,
+      "capacity": "N/A",
+      "efficiency": "N/A",
+      "efficiency_unit": "N/A",
+      "hours_per_week": 56,
+      "days_per_week": 7,
+      "annual_kwh": 1560,
+      "annual_hours": 2920,
+      "input_rating": null,
+      "flow_rate": "N/A",
+      "temperature_rise": null,
+      "load_factor": null,
+      "confidence": 0.9,
+      "assumptions": [
+        "Assumed 8 hours of operation per day."
+      ],
+      "recommendations": "Consider energy-efficient pool equipment.",
+      "end_use_category": "Pool/Spa"
+    },
+    {
+      "equipment_type": "Top load washer",
+      "manufacturer": "Unknown",
+      "model": "Unknown",
+      "category": "Laundry",
+      "quantity": 4,
+      "location": "Laundry room",
+      "location_type": "Common area",
+      "energy_source": "Electricity",
+      "wattage": 500,
+      "capacity": "N/A",
+      "efficiency": "N/A",
+      "efficiency_unit": "N/A",
+      "hours_per_week": 4,
+      "days_per_week": 7,
+      "annual_kwh": 182.5,
+      "annual_hours": 365,
+      "input_rating": null,
+      "flow_rate": "N/A",
+      "temperature_rise": null,
+      "load_factor": null,
+      "confidence": 0.9,
+      "assumptions": [
+        "Assumed 1 hour of operation per day."
+      ],
+      "recommendations": "Encourage tenants to use energy-efficient models.",
+      "end_use_category": "Laundry"
+    },
+    {
+      "equipment_type": "Gas dryer",
+      "manufacturer": "Unknown",
+      "model": "Unknown",
+      "category": "Laundry",
+      "quantity": 4,
+      "location": "Laundry room",
+      "location_type": "Common area",
+      "energy_source": "Gas",
+      "wattage": null,
+      "capacity": "N/A",
+      "efficiency": "N/A",
+      "efficiency_unit": "N/A",
+      "hours_per_week": 4,
+      "days_per_week": 7,
+      "annual_kwh": 0,
+      "annual_hours": 0,
+      "input_rating": null,
+      "flow_rate": "N/A",
+      "temperature_rise": null,
+      "load_factor": null,
+      "confidence": 0.8,
+      "assumptions": [
+        "Assumed gas dryers, no specific wattage provided."
+      ],
+      "recommendations": "Ensure regular maintenance and efficiency checks.",
+      "end_use_category": "Laundry"
+    }
+  ],
+  "flags": [
+    {
+      "type": "missing_information",
+      "message": "No specific wattage provided for gas dryers and hot water heaters.",
+      "severity": "medium"
+    },
+    {
+      "type": "ambiguous_information",
+      "message": "Unclear if all lights are LED or CFL in some areas.",
+      "severity": "low"
+    },
+    {
+      "type": "inconsistent_data",
+      "message": "Some units have tenant-supplied appliances not accounted for.",
+      "severity": "medium"
+    },
+    {
+      "type": "low_equipment_count",
+      "message": "Equipment quantities seem low for the building size.",
+      "severity": "high"
+    }
+  ],
+  "metadata": {
+    "confidence": 0.85,
+    "processingTimeMs": 1500,
+    "processedAt": "2024-08-12T12:00:00Z"
+  }
+}
